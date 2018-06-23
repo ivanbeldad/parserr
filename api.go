@@ -20,7 +20,7 @@ const (
 
 // GetQueue ...
 func GetQueue() (queue []QueueElement, err error) {
-	body, err := Get(APIQueueURL)
+	body, err := Get(GetURL(APIQueueURL).String())
 	if err != nil {
 		return
 	}
