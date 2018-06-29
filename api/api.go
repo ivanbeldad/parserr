@@ -66,12 +66,16 @@ func GetHistory(page int) (history History, err error) {
 	u := GetURL(APIHistoryURL)
 	query := u.Query()
 	query.Add("page", strconv.Itoa(page))
+	query.Add("pageSize", "10")
 	u.RawQuery = query.Encode()
 	body, err := Get(u.String())
 	if err != nil {
 		return
 	}
 	err = json.Unmarshal(body, &history)
+	if history.PageSize == 0 {
+		return history, fmt.Errorf("history fetched 0 results, no more items")
+	}
 	return
 }
 
