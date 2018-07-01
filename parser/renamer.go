@@ -80,9 +80,6 @@ func (s Show) IsBroken() bool {
 }
 
 func (s Show) guessFileName() (string, error) {
-	if len(s.QueueElement.StatusMessages) == 1 {
-		return s.QueueElement.StatusMessages[0].Title, nil
-	}
 	episode := s.QueueElement.Episode
 	regexString := fmt.Sprintf("%d.{0,4}%d", episode.SeasonNumber, episode.EpisodeNumber)
 	regex := regexp.MustCompile(regexString)
