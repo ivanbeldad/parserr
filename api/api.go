@@ -19,6 +19,8 @@ const (
 	APICommandURL = APIURL + "/command"
 	// APIHistoryURL ...
 	APIHistoryURL = APIURL + "/history"
+	// APIEpisodeURL ...
+	APIEpisodeURL = APIURL + "/episode"
 	// StatusCompleted ...
 	StatusCompleted = "Completed"
 	// TrackedDownloadStatusWarning ...
@@ -35,6 +37,24 @@ func GetQueue() (queue []QueueElement, err error) {
 	return
 }
 
+// DeleteQueueItem ...
+func DeleteQueueItem(id int) (err error) {
+	u := GetURL(APIQueueURL).String() + "/" + strconv.Itoa(id)
+	client := &http.Client{}
+	req, err := http.NewRequest("DELETE", u, nil)
+	if err != nil {
+		return
+	}
+	res, err := client.Do(req)
+	if err != nil {
+		return
+	}
+	if res.StatusCode != 200 {
+		return fmt.Errorf("error deleting item from queue, status code %d", res.StatusCode)
+	}
+	return nil
+}
+
 // GetHistory ...
 func GetHistory(page int) (history History, err error) {
 	u := GetURL(APIHistoryURL)
@@ -46,6 +66,17 @@ func GetHistory(page int) (history History, err error) {
 		return
 	}
 	err = json.Unmarshal(body, &history)
+	return
+}
+
+// GetEpisode ...
+func GetEpisode(id int) (episode Episode, err error) {
+	u := GetURL(APIEpisodeURL + "/" + strconv.Itoa(id))
+	body, err := Get(u.String())
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal(body, &episode)
 	return
 }
 

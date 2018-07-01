@@ -31,6 +31,7 @@ func (h HistoryRecord) String() string {
 
 // QueueElement ...
 type QueueElement struct {
+	ID                    int
 	DownloadID            string
 	Title                 string
 	Status                string
@@ -42,8 +43,8 @@ type QueueElement struct {
 }
 
 func (q QueueElement) String() string {
-	format := "QueueElement\nDownloadID: %s\nTitle: %s\nStatus: %s\nTrackedDownloadStatus: %s\n%s%s%s%s\n"
-	return fmt.Sprintf(format, q.DownloadID, q.Title, q.Status, q.TrackedDownloadStatus, q.Series, q.Episode, q.Quality, q.StatusMessages)
+	format := "QueueElement\nID: %d\nDownloadID: %s\nTitle: %s\nStatus: %s\nTrackedDownloadStatus: %s\n%s%s%s%s\n"
+	return fmt.Sprintf(format, q.ID, q.DownloadID, q.Title, q.Status, q.TrackedDownloadStatus, q.Series, q.Episode, q.Quality, q.StatusMessages)
 }
 
 // History ...
@@ -60,13 +61,15 @@ func (h History) String() string {
 
 // Episode ...
 type Episode struct {
+	ID            int
 	SeasonNumber  int
 	EpisodeNumber int
+	HasFile       bool
 }
 
 func (e Episode) String() string {
-	format := "Episode\nSeasonNumber: %d\nEpisodeNumber: %d\n"
-	return fmt.Sprintf(format, e.SeasonNumber, e.EpisodeNumber)
+	format := "Episode\nID: %d\nSeasonNumber: %d\nEpisodeNumber: %d\nHasFile: %v\n"
+	return fmt.Sprintf(format, e.ID, e.SeasonNumber, e.EpisodeNumber, e.HasFile)
 }
 
 // Series ...
