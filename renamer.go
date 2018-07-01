@@ -20,13 +20,13 @@ type Show struct {
 }
 
 // FixFailedShows ...
-func FixFailedShows() ([]Show, error) {
+func FixFailedShows() ([]*Show, error) {
 	shows, err := loadFailedShows()
 	if err != nil {
 		return nil, err
 	}
 	for _, s := range shows {
-		err = s.FixNaming()
+		err = s.fixNaming()
 		if err != nil {
 			log.Printf("error fixing show %s: %s", s.QueueElement.Title, err.Error())
 		}
@@ -35,8 +35,8 @@ func FixFailedShows() ([]Show, error) {
 }
 
 // loadFailedShows ...
-func loadFailedShows() ([]Show, error) {
-	shows := make([]Show, 0)
+func loadFailedShows() ([]*Show, error) {
+	shows := make([]*Show, 0)
 	queue, err := api.GetQueue()
 	if err != nil {
 		return nil, err
@@ -58,7 +58,8 @@ func loadFailedShows() ([]Show, error) {
 			sameSeason := queue[i].Episode.SeasonNumber == he.Episode.SeasonNumber
 			if sameDownloadID && sameSeason && sameEpisode {
 				found = true
-				shows = append(shows, Show{HistoryRecord: he, QueueElement: queue[i]})
+				newShow := Show{HistoryRecord: he, QueueElement: queue[i]}
+				shows = append(shows, &newShow)
 				log.Printf("failed show detected: %s", queue[i].Title)
 			}
 		}
@@ -95,7 +96,6 @@ func (s Show) guessFileName() (string, error) {
 
 func (s Show) guessFinalName(filename string) (string, error) {
 	finalTitle := s.HistoryRecord.SourceTitle
-	fmt.Printf("final title initial: %s\n", finalTitle)
 	if len(s.QueueElement.StatusMessages) == 1 {
 		return finalTitle, nil
 	}
@@ -108,13 +108,12 @@ func (s Show) guessFinalName(filename string) (string, error) {
 	match := regex.FindString(finalTitle)
 	new := fmt.Sprintf(".S%.2dE%.2d.", episode.SeasonNumber, episode.EpisodeNumber)
 	finalTitle = strings.Replace(finalTitle, match, new, 1)
-	fmt.Printf("final title final: %s\n", finalTitle)
 	return finalTitle, nil
 }
 
-// FixNaming Try to rename downloaded files to the original
+// fixNaming Try to rename downloaded files to the original
 // torrent name.
-func (s Show) FixNaming() error {
+func (s *Show) fixNaming() error {
 	filename, err := s.guessFileName()
 	if err != nil {
 		return err
@@ -155,7 +154,7 @@ func moveFromTo(sourcePath, destPath string) error {
 	}
 	err = os.Remove(sourcePath)
 	if err != nil {
-		return fmt.Errorf("Failed removing original file: %s", err)
+		return fmt.Errorf("failed removing original file: %s", err)
 	}
 	return nil
 }
