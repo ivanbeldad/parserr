@@ -39,7 +39,7 @@ func GetQueue() (queue []QueueElement, err error) {
 
 // DeleteQueueItem ...
 func DeleteQueueItem(id int) (err error) {
-	u := GetURL(APIQueueURL).String() + "/" + strconv.Itoa(id)
+	u := GetURL(APIQueueURL + "/" + strconv.Itoa(id)).String()
 	client := &http.Client{}
 	req, err := http.NewRequest("DELETE", u, nil)
 	if err != nil {
