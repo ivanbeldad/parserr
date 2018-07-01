@@ -12,8 +12,9 @@ import (
 
 // Show ...
 type Show struct {
-	HistoryRecord api.HistoryRecord
-	QueueElement  api.QueueElement
+	HistoryRecord  api.HistoryRecord
+	QueueElement   api.QueueElement
+	HasBeenRenamed bool
 }
 
 // IsBroken ...
@@ -43,14 +44,19 @@ func (s Show) FixNaming() error {
 	if err != nil {
 		return err
 	}
-	path, err := LocationOfFile(os.Getenv(api.EnvSonarrDownloadFolder), filename)
+	path, err := locationOfFile(os.Getenv(api.EnvSonarrDownloadFolder), filename)
 	if err != nil {
 		return err
 	}
 	newPath := strings.Replace(path, filename, s.HistoryRecord.SourceTitle, 1)
 	newPath += filepath.Ext(path)
 	log.Printf("renaming %s to %s", path, newPath)
-	return os.Rename(path, newPath)
+	err = os.Rename(path, newPath)
+	if err != nil {
+		return err
+	}
+	s.HasBeenRenamed = true
+	return nil
 }
 
 // LoadFailedShows ...
