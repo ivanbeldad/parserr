@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 )
 
 const (
@@ -16,6 +17,8 @@ const (
 	APIQueueURL = APIURL + "/queue"
 	// APICommandURL ...
 	APICommandURL = APIURL + "/command"
+	// APIHistoryURL ...
+	APIHistoryURL = APIURL + "/history"
 )
 
 // GetQueue ...
@@ -25,6 +28,20 @@ func GetQueue() (queue []QueueElement, err error) {
 		return
 	}
 	err = json.Unmarshal(body, &queue)
+	return
+}
+
+// GetHistory ...
+func GetHistory(page int) (history History, err error) {
+	u := GetURL(APIHistoryURL)
+	query := u.Query()
+	query.Add("page", strconv.Itoa(page))
+	u.RawQuery = query.Encode()
+	body, err := Get(u.String())
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal(body, &history)
 	return
 }
 
