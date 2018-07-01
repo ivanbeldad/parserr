@@ -2,8 +2,10 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
 	"sonarr-parser-helper/api"
@@ -17,50 +19,23 @@ type Show struct {
 	HasBeenRenamed bool
 }
 
-// IsBroken ...
-func (s Show) IsBroken() bool {
-	return s.HistoryRecord.TrackedDownloadStatus == api.TrackedDownloadStatusWarning
-}
-
-func (s Show) guessFileName() (string, error) {
-	if len(s.QueueElement.StatusMessages) == 1 {
-		return s.QueueElement.StatusMessages[0].Title, nil
+// FixFailedShows ...
+func FixFailedShows() ([]Show, error) {
+	shows, err := loadFailedShows()
+	if err != nil {
+		return nil, err
 	}
-	episode := s.QueueElement.Episode
-	regexString := fmt.Sprintf("%d.{0,4}%d", episode.SeasonNumber, episode.EpisodeNumber)
-	regex := regexp.MustCompile(regexString)
-	for _, message := range s.QueueElement.StatusMessages {
-		if regex.MatchString(message.Title) {
-			return message.Title, nil
+	for _, s := range shows {
+		err = s.FixNaming()
+		if err != nil {
+			log.Printf("error fixing show %s: %s", s.QueueElement.Title, err.Error())
 		}
 	}
-	return "", fmt.Errorf("imposible to guess file name for %s", s.QueueElement.Title)
+	return shows, nil
 }
 
-// FixNaming Try to rename downloaded files to the original
-// torrent name.
-func (s Show) FixNaming() error {
-	filename, err := s.guessFileName()
-	if err != nil {
-		return err
-	}
-	path, err := locationOfFile(os.Getenv(api.EnvSonarrDownloadFolder), filename)
-	if err != nil {
-		return err
-	}
-	newPath := strings.Replace(path, filename, s.HistoryRecord.SourceTitle, 1)
-	newPath += filepath.Ext(path)
-	log.Printf("renaming %s to %s", path, newPath)
-	err = os.Rename(path, newPath)
-	if err != nil {
-		return err
-	}
-	s.HasBeenRenamed = true
-	return nil
-}
-
-// LoadFailedShows ...
-func LoadFailedShows() ([]Show, error) {
+// loadFailedShows ...
+func loadFailedShows() ([]Show, error) {
 	shows := make([]Show, 0)
 	queue, err := api.GetQueue()
 	if err != nil {
@@ -96,6 +71,93 @@ func LoadFailedShows() ([]Show, error) {
 		}
 	}
 	return shows, nil
+}
+
+// IsBroken ...
+func (s Show) IsBroken() bool {
+	return s.HistoryRecord.TrackedDownloadStatus == api.TrackedDownloadStatusWarning
+}
+
+func (s Show) guessFileName() (string, error) {
+	if len(s.QueueElement.StatusMessages) == 1 {
+		return s.QueueElement.StatusMessages[0].Title, nil
+	}
+	episode := s.QueueElement.Episode
+	regexString := fmt.Sprintf("%d.{0,4}%d", episode.SeasonNumber, episode.EpisodeNumber)
+	regex := regexp.MustCompile(regexString)
+	for _, message := range s.QueueElement.StatusMessages {
+		if regex.MatchString(message.Title) {
+			return message.Title, nil
+		}
+	}
+	return "", fmt.Errorf("imposible to guess file name for %s", s.QueueElement.Title)
+}
+
+func (s Show) guessFinalName(filename string) (string, error) {
+	finalTitle := s.HistoryRecord.SourceTitle
+	fmt.Printf("final title initial: %s\n", finalTitle)
+	if len(s.QueueElement.StatusMessages) == 1 {
+		return finalTitle, nil
+	}
+	episode := s.QueueElement.Episode
+	regexString := fmt.Sprintf("[.\\-_ ]([\\-_0-9sSeExX]{2,10})[.\\-_ ]")
+	regex := regexp.MustCompile(regexString)
+	if !regex.MatchString(finalTitle) {
+		return "", fmt.Errorf("unable to guess final episode name of %s", filename)
+	}
+	match := regex.FindString(finalTitle)
+	new := fmt.Sprintf(".S%.2dE%.2d.", episode.SeasonNumber, episode.EpisodeNumber)
+	finalTitle = strings.Replace(finalTitle, match, new, 1)
+	fmt.Printf("final title final: %s\n", finalTitle)
+	return finalTitle, nil
+}
+
+// FixNaming Try to rename downloaded files to the original
+// torrent name.
+func (s Show) FixNaming() error {
+	filename, err := s.guessFileName()
+	if err != nil {
+		return err
+	}
+	oldPath, err := locationOfFile(os.Getenv(api.EnvSonarrDownloadFolder), filename)
+	if err != nil {
+		return err
+	}
+	finalName, err := s.guessFinalName(filename)
+	if err != nil {
+		return err
+	}
+	newPath := path.Join(s.QueueElement.Series.Path, finalName+filepath.Ext(oldPath))
+	log.Printf("renaming %s to %s", oldPath, newPath)
+	err = moveFromTo(oldPath, newPath)
+	if err != nil {
+		return err
+	}
+	s.HasBeenRenamed = true
+	return nil
+}
+
+func moveFromTo(sourcePath, destPath string) error {
+	inputFile, err := os.Open(sourcePath)
+	if err != nil {
+		return fmt.Errorf("couldn't open source file: %s", err)
+	}
+	outputFile, err := os.Create(destPath)
+	if err != nil {
+		inputFile.Close()
+		return fmt.Errorf("couldn't open dest file: %s", err)
+	}
+	defer outputFile.Close()
+	_, err = io.Copy(outputFile, inputFile)
+	inputFile.Close()
+	if err != nil {
+		return fmt.Errorf("writing to output file failed: %s", err)
+	}
+	err = os.Remove(sourcePath)
+	if err != nil {
+		return fmt.Errorf("Failed removing original file: %s", err)
+	}
+	return nil
 }
 
 func addPageToHistory(h api.History) (api.History, error) {

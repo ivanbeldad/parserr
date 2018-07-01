@@ -77,10 +77,11 @@ func (e Episode) String() string {
 // Series ...
 type Series struct {
 	Title string
+	Path  string
 }
 
 func (s Series) String() string {
-	return fmt.Sprintf("Series\nTitle: %s\n", s.Title)
+	return fmt.Sprintf("Series\nTitle: %s\nPath: %s\n", s.Title, s.Path)
 }
 
 // Quality ...
