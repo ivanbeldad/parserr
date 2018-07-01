@@ -19,6 +19,10 @@ const (
 	APICommandURL = APIURL + "/command"
 	// APIHistoryURL ...
 	APIHistoryURL = APIURL + "/history"
+	// StatusCompleted ...
+	StatusCompleted = "Completed"
+	// TrackedDownloadStatusWarning ...
+	TrackedDownloadStatusWarning = "Warning"
 )
 
 // GetQueue ...
@@ -51,7 +55,7 @@ func ExecuteCommand(c Command) (err error) {
 	if err != nil {
 		return
 	}
-	_, err = http.Post(GetURL(APIQueueURL).String(), "application/json", bytes.NewReader(j))
+	_, err = http.Post(GetURL(APICommandURL).String(), "application/json", bytes.NewReader(j))
 	return
 }
 

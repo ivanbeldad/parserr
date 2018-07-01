@@ -25,7 +25,7 @@ type HistoryRecord struct {
 }
 
 func (h HistoryRecord) String() string {
-	format := "QueueElement\nDownloadID: %s\nSourceTitle: %s\nStatus: %s\nTrackedDownloadStatus: %s\n%s%s%s\n"
+	format := "HistoryRecord\nDownloadID: %s\nSourceTitle: %s\nStatus: %s\nTrackedDownloadStatus: %s\n%s%s%s\n"
 	return fmt.Sprintf(format, h.DownloadID, h.SourceTitle, h.Status, h.TrackedDownloadStatus, h.Series, h.Episode, h.Quality)
 }
 
@@ -38,11 +38,12 @@ type QueueElement struct {
 	Series                Series
 	Episode               Episode
 	Quality               Quality
+	StatusMessages        []StatusMessage
 }
 
 func (q QueueElement) String() string {
-	format := "QueueElement\nDownloadID: %s\nTitle: %s\nStatus: %s\nTrackedDownloadStatus: %s\n%s%s%s\n"
-	return fmt.Sprintf(format, q.DownloadID, q.Title, q.Status, q.TrackedDownloadStatus, q.Series, q.Episode, q.Quality)
+	format := "QueueElement\nDownloadID: %s\nTitle: %s\nStatus: %s\nTrackedDownloadStatus: %s\n%s%s%s%s\n"
+	return fmt.Sprintf(format, q.DownloadID, q.Title, q.Status, q.TrackedDownloadStatus, q.Series, q.Episode, q.Quality, q.StatusMessages)
 }
 
 // History ...
@@ -95,8 +96,21 @@ func (eq EpisodeQuality) String() string {
 	return fmt.Sprintf("EpisodeQuality\nName: %s\n", eq.Name)
 }
 
+// StatusMessage ...
+type StatusMessage struct {
+	Title string
+}
+
+func (sm StatusMessage) String() string {
+	return fmt.Sprintf("StatusMessage\nTitle: %s\n", sm.Title)
+}
+
 // Command ...
 type Command struct {
-	Name string
-	Path string
+	Name string `json:"name"`
+}
+
+// NewRescanSeriesCommand Create a command instance to force to rescan series form disk
+func NewRescanSeriesCommand() Command {
+	return Command{Name: "RescanSeries"}
 }
