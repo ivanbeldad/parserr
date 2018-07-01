@@ -81,12 +81,24 @@ func GetEpisode(id int) (episode Episode, err error) {
 }
 
 // ExecuteCommand ...
-func ExecuteCommand(c Command) (err error) {
+func ExecuteCommand(c CommandBody) (command Command, err error) {
 	j, err := json.Marshal(c)
 	if err != nil {
 		return
 	}
-	_, err = http.Post(GetURL(APICommandURL).String(), "application/json", bytes.NewReader(j))
+	body, err := Post(GetURL(APICommandURL).String(), bytes.NewReader(j))
+	err = json.Unmarshal(body, &command)
+	return
+}
+
+// GetCommand ...
+func GetCommand(id int) (command Command, err error) {
+	u := GetURL(APICommandURL + "/" + strconv.Itoa(id))
+	body, err := Get(u.String())
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal(body, &command)
 	return
 }
 

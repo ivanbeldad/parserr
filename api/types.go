@@ -11,6 +11,8 @@ const (
 	EnvSonarrDownloadFolder = "SONARR_DOWNLOAD_FOLDER"
 	// StatusWarning ...
 	StatusWarning = "Warning"
+	// CommandStateCompleted ...
+	CommandStateCompleted = "completed"
 )
 
 // HistoryRecord ...
@@ -110,10 +112,21 @@ func (sm StatusMessage) String() string {
 
 // Command ...
 type Command struct {
+	ID    int
+	Name  string
+	State string
+}
+
+func (c Command) String() string {
+	return fmt.Sprintf("Command\nID: %d\nName: %s\nState: %s\n", c.ID, c.Name, c.State)
+}
+
+// CommandBody ...
+type CommandBody struct {
 	Name string `json:"name"`
 }
 
 // NewRescanSeriesCommand Create a command instance to force to rescan series form disk
-func NewRescanSeriesCommand() Command {
-	return Command{Name: "RescanSeries"}
+func NewRescanSeriesCommand() CommandBody {
+	return CommandBody{Name: "RescanSeries"}
 }
