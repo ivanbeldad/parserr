@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"sonarr-parser-helper/api"
+	"strings"
 	"time"
 )
 
@@ -15,7 +16,7 @@ const (
 )
 
 // CleanFixedShows ...
-func CleanFixedShows(shows []Show) error {
+func CleanFixedShows(shows []*Show) error {
 	command, err := api.ExecuteCommand(api.NewRescanSeriesCommand())
 	if err != nil {
 		return err
@@ -25,18 +26,20 @@ func CleanFixedShows(shows []Show) error {
 	if err != nil {
 		return err
 	}
-	var fullError string
+	var errors []string
 	for _, s := range shows {
-		if s.HasBeenRenamed {
+		if s.HasBeenRenamed && hasBeenDetected(s) {
 			err = api.DeleteQueueItem(s.QueueElement.ID)
 			if err != nil {
 				log.Print(err)
-				fullError += ", " + err.Error()
+				errors = append(errors, err.Error())
+			} else {
+				log.Printf("episode cleared from the queue: %s", s.QueueElement.Title)
 			}
 		}
 	}
-	if fullError != "" {
-		return fmt.Errorf("%s", fullError)
+	if len(errors) > 0 {
+		return fmt.Errorf("%s", strings.Join(errors, ", "))
 	}
 	return nil
 }
@@ -55,4 +58,14 @@ func waitToFinish(command api.Command) error {
 		totalWait += CheckInterval
 	}
 	return fmt.Errorf("timeout checking command rescan series, clean not completed")
+}
+
+func hasBeenDetected(s *Show) bool {
+	ep, err := api.GetEpisode(s.QueueElement.Episode.ID)
+	if err != nil {
+		log.Printf("cannot detect if episode %s has been detected", s.QueueElement.Title)
+		return false
+	}
+	log.Printf("episode detected: %v", ep.HasFile)
+	return ep.HasFile
 }
