@@ -66,6 +66,5 @@ func hasBeenDetected(s *Show) bool {
 		log.Printf("cannot detect if episode %s has been detected", s.QueueElement.Title)
 		return false
 	}
-	log.Printf("episode detected: %v", ep.HasFile)
 	return ep.HasFile
 }
