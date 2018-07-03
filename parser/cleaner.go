@@ -16,7 +16,11 @@ func CleanFixedShows(shows []*Show) error {
 	}
 	var errors []string
 	for _, s := range shows {
-		if s.HasBeenRenamed && hasBeenDetected(s) {
+		// TODO
+		// If there is no way to rename episode
+		// or it isn't been detected then
+		// add to blacklist and retry download
+		if s.HasBeenRenamed && s.HasBeenDetected() {
 			err = api.DeleteQueueItem(s.QueueElement.ID)
 			if err != nil {
 				log.Print(err)
@@ -30,13 +34,4 @@ func CleanFixedShows(shows []*Show) error {
 		return fmt.Errorf("%s", strings.Join(errors, ", "))
 	}
 	return nil
-}
-
-func hasBeenDetected(s *Show) bool {
-	ep, err := api.GetEpisode(s.QueueElement.Episode.ID)
-	if err != nil {
-		log.Printf("cannot detect if episode %s has been detected", s.QueueElement.Title)
-		return false
-	}
-	return ep.HasFile
 }
