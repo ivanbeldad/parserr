@@ -5,24 +5,12 @@ import (
 	"log"
 	"sonarr-parser-helper/api"
 	"strings"
-	"time"
-)
-
-const (
-	// MaxTime Max interval to check series and clean them
-	MaxTime = time.Minute * 5
-	// CheckInterval Time between requests to check if rescan is completed
-	CheckInterval = time.Second * 5
 )
 
 // CleanFixedShows ...
 func CleanFixedShows(shows []*Show) error {
-	cs, err := api.ExecuteCommand(api.NewRescanSeriesCommand())
-	if err != nil {
-		return err
-	}
 	log.Printf("executing rescan series")
-	err = waitToFinish(cs.Command)
+	_, err := api.ExecuteCommandAndWait(api.NewRescanSeriesCommand())
 	if err != nil {
 		return err
 	}
@@ -42,22 +30,6 @@ func CleanFixedShows(shows []*Show) error {
 		return fmt.Errorf("%s", strings.Join(errors, ", "))
 	}
 	return nil
-}
-
-func waitToFinish(command api.Command) error {
-	totalWait := CheckInterval
-	for totalWait <= MaxTime {
-		time.Sleep(CheckInterval)
-		result, err := api.GetCommandStatus(command.ID)
-		if err == nil {
-			if result.State == api.CommandStateCompleted {
-				log.Print("finished rescan series successfully")
-				return nil
-			}
-		}
-		totalWait += CheckInterval
-	}
-	return fmt.Errorf("timeout checking command rescan series, clean not completed")
 }
 
 func hasBeenDetected(s *Show) bool {

@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 const (
@@ -25,6 +27,10 @@ const (
 	StatusCompleted = "Completed"
 	// TrackedDownloadStatusWarning ...
 	TrackedDownloadStatusWarning = "Warning"
+	// MaxTime Max interval to check series and clean them
+	MaxTime = time.Minute * 5
+	// CheckInterval Time between requests to check if rescan is completed
+	CheckInterval = time.Second * 5
 )
 
 // GetQueue ...
@@ -89,6 +95,27 @@ func ExecuteCommand(c CommandBody) (cs CommandStatus, err error) {
 	body, err := Post(GetURL(APICommandURL).String(), bytes.NewReader(j))
 	err = json.Unmarshal(body, &cs)
 	return
+}
+
+// ExecuteCommandAndWait ...
+func ExecuteCommandAndWait(c CommandBody) (cs CommandStatus, err error) {
+	cs, err = ExecuteCommand(c)
+	if err != nil {
+		return
+	}
+	totalWait := CheckInterval
+	for totalWait <= MaxTime {
+		time.Sleep(CheckInterval)
+		cs, err = GetCommandStatus(cs.ID)
+		if err == nil {
+			if cs.State == CommandStateCompleted {
+				log.Printf("finished %s successfully", c.Name)
+				return
+			}
+		}
+		totalWait += CheckInterval
+	}
+	return cs, fmt.Errorf("timeout checking command %s, not completed", c.Name)
 }
 
 // GetCommandStatus ...
