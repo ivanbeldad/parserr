@@ -113,12 +113,21 @@ func (sm StatusMessage) String() string {
 
 // Command ...
 type Command struct {
-	ID    int
-	Name  string
-	State string
+	ID   int
+	Name string
 }
 
 func (c Command) String() string {
+	return fmt.Sprintf("Command\nID: %d\nName: %s\n", c.ID, c.Name)
+}
+
+// CommandStatus ...
+type CommandStatus struct {
+	Command
+	State string
+}
+
+func (c CommandStatus) String() string {
 	return fmt.Sprintf("Command\nID: %d\nName: %s\nState: %s\n", c.ID, c.Name, c.State)
 }
 

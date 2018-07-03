@@ -17,12 +17,12 @@ const (
 
 // CleanFixedShows ...
 func CleanFixedShows(shows []*Show) error {
-	command, err := api.ExecuteCommand(api.NewRescanSeriesCommand())
+	cs, err := api.ExecuteCommand(api.NewRescanSeriesCommand())
 	if err != nil {
 		return err
 	}
 	log.Printf("executing rescan series")
-	err = waitToFinish(command)
+	err = waitToFinish(cs.Command)
 	if err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func waitToFinish(command api.Command) error {
 	totalWait := CheckInterval
 	for totalWait <= MaxTime {
 		time.Sleep(CheckInterval)
-		result, err := api.GetCommand(command.ID)
+		result, err := api.GetCommandStatus(command.ID)
 		if err == nil {
 			if result.State == api.CommandStateCompleted {
 				log.Print("finished rescan series successfully")
