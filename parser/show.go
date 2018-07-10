@@ -26,7 +26,7 @@ func (s Show) IsBroken() bool {
 
 // FixNaming Try to rename downloaded files to the original
 // torrent name.
-func (s *Show) FixNaming() error {
+func (s *Show) FixNaming(m Move) error {
 	filename, err := s.guessFileName()
 	if err != nil {
 		return err
@@ -41,7 +41,7 @@ func (s *Show) FixNaming() error {
 	}
 	newPath := path.Join(s.QueueElement.Series.Path, finalName+filepath.Ext(oldPath))
 	log.Printf("renaming %s to %s", oldPath, newPath)
-	err = moveFromTo(oldPath, newPath)
+	err = m.Move(oldPath, newPath)
 	if err != nil {
 		return err
 	}

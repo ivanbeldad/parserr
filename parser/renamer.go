@@ -2,7 +2,6 @@ package parser
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -10,13 +9,13 @@ import (
 )
 
 // FixFailedShows ...
-func FixFailedShows() ([]*Show, error) {
+func FixFailedShows(m Move) ([]*Show, error) {
 	shows, err := loadFailedShows()
 	if err != nil {
 		return nil, err
 	}
 	for _, s := range shows {
-		err = s.FixNaming()
+		err = s.FixNaming(m)
 		if err != nil {
 			log.Printf("error fixing show %s: %s", s.QueueElement.Title, err.Error())
 		}
@@ -54,37 +53,14 @@ func loadFailedShows() ([]*Show, error) {
 			}
 		}
 		if !found {
-			i--
 			history, err = addPageToHistory(history)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("%s, imposible to guess failed file", err)
 			}
+			i--
 		}
 	}
 	return shows, nil
-}
-
-func moveFromTo(sourcePath, destPath string) error {
-	inputFile, err := os.Open(sourcePath)
-	if err != nil {
-		return fmt.Errorf("couldn't open source file: %s", err)
-	}
-	outputFile, err := os.Create(destPath)
-	if err != nil {
-		inputFile.Close()
-		return fmt.Errorf("couldn't open dest file: %s", err)
-	}
-	defer outputFile.Close()
-	_, err = io.Copy(outputFile, inputFile)
-	inputFile.Close()
-	if err != nil {
-		return fmt.Errorf("writing to output file failed: %s", err)
-	}
-	err = os.Remove(sourcePath)
-	if err != nil {
-		return fmt.Errorf("failed removing original file: %s", err)
-	}
-	return nil
 }
 
 func addPageToHistory(h api.History) (api.History, error) {
@@ -104,6 +80,9 @@ func locationOfFile(root, filename string) (string, error) {
 	var location string
 	var err error
 	err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
 		if info.Name() == filename {
 			location = path
 			return fmt.Errorf("ok")
