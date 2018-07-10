@@ -8,9 +8,9 @@ import (
 )
 
 // CleanFixedShows ...
-func CleanFixedShows(shows []*Show) error {
+func CleanFixedShows(a api.API, shows []*Show) error {
 	log.Printf("executing rescan series")
-	_, err := api.ExecuteCommandAndWait(api.NewRescanSeriesCommand())
+	_, err := a.ExecuteCommandAndWait(api.NewRescanSeriesCommand())
 	if err != nil {
 		return err
 	}
@@ -20,8 +20,8 @@ func CleanFixedShows(shows []*Show) error {
 		// If there is no way to rename episode
 		// or it isn't been detected then
 		// add to blacklist and retry download
-		if s.HasBeenRenamed && s.HasBeenDetected() {
-			err = api.DeleteQueueItem(s.QueueElement.ID)
+		if s.HasBeenRenamed && s.HasBeenDetected(a) {
+			err = a.DeleteQueueItem(s.QueueElement.ID)
 			if err != nil {
 				log.Print(err)
 				errors = append(errors, err.Error())

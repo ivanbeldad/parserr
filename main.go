@@ -11,12 +11,26 @@ import (
 
 func main() {
 	loadEnvOrFatal()
-	check()
+	// check()
+	testRadarr()
+}
+
+func createAPI() api.API {
+	return api.NewAPI(os.Getenv("RADARR_URL"), os.Getenv("RADARR_APIKEY"))
+}
+
+func testRadarr() {
+	a := createAPI()
+	_, err := parser.FixFailedShows(a, parser.FakeMove{})
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func check() {
+	a := createAPI()
 	parser.ExtractAll(os.Getenv(api.EnvSonarrDownloadFolder))
-	shows, err := parser.FixFailedShows()
+	shows, err := parser.FixFailedShows(a, parser.FakeMove{})
 	if err != nil {
 		log.Printf("error fixing shows: %s", err.Error())
 		return
@@ -25,7 +39,7 @@ func check() {
 		log.Print("no failed episodes")
 		return
 	}
-	err = parser.CleanFixedShows(shows)
+	err = parser.CleanFixedShows(a, shows)
 	if err != nil {
 		log.Printf("error cleaning shows: %s", err.Error())
 		return

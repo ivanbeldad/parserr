@@ -9,8 +9,8 @@ import (
 )
 
 // FixFailedShows ...
-func FixFailedShows(m Move) ([]*Show, error) {
-	shows, err := loadFailedShows()
+func FixFailedShows(a api.API, m Move) ([]*Show, error) {
+	shows, err := loadFailedShows(a)
 	if err != nil {
 		return nil, err
 	}
@@ -24,13 +24,13 @@ func FixFailedShows(m Move) ([]*Show, error) {
 }
 
 // loadFailedShows ...
-func loadFailedShows() ([]*Show, error) {
+func loadFailedShows(a api.API) ([]*Show, error) {
 	shows := make([]*Show, 0)
-	queue, err := api.GetQueue()
+	queue, err := a.GetQueue()
 	if err != nil {
 		return nil, err
 	}
-	history, err := api.GetHistory(1)
+	history, err := a.GetHistory(1)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func loadFailedShows() ([]*Show, error) {
 			}
 		}
 		if !found {
-			history, err = addPageToHistory(history)
+			history, err = addPageToHistory(a, history)
 			if err != nil {
 				return nil, fmt.Errorf("%s, imposible to guess failed file", err)
 			}
@@ -63,9 +63,9 @@ func loadFailedShows() ([]*Show, error) {
 	return shows, nil
 }
 
-func addPageToHistory(h api.History) (api.History, error) {
+func addPageToHistory(a api.API, h api.History) (api.History, error) {
 	newPage := h.Page + 1
-	newHistory, err := api.GetHistory(newPage)
+	newHistory, err := a.GetHistory(newPage)
 	if err != nil {
 		return h, err
 	}

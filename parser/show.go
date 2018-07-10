@@ -51,8 +51,8 @@ func (s *Show) FixNaming(m Move) error {
 
 // HasBeenDetected Return true if the show has been detected,
 // false otherwise (including errors)
-func (s Show) HasBeenDetected() bool {
-	ep, err := api.GetEpisode(s.QueueElement.Episode.ID)
+func (s Show) HasBeenDetected(a api.API) bool {
+	ep, err := a.GetEpisode(s.QueueElement.Episode.ID)
 	if err != nil {
 		log.Printf("cannot detect if episode %s has been detected", s.QueueElement.Title)
 		return false

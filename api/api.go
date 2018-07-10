@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"strconv"
 	"time"
 )
@@ -33,9 +34,23 @@ const (
 	CheckInterval = time.Second * 5
 )
 
+// API ..
+type API struct {
+	URL    string
+	APIKey string
+}
+
+// NewAPI Return an instance of an API
+func NewAPI(URL, APIKey string) API {
+	return API{
+		URL:    URL,
+		APIKey: APIKey,
+	}
+}
+
 // GetQueue ...
-func GetQueue() (queue []QueueElement, err error) {
-	body, err := Get(GetURL(APIQueueURL).String())
+func (a API) GetQueue() (queue []QueueElement, err error) {
+	body, err := get(a.getURL(APIQueueURL).String())
 	if err != nil {
 		return
 	}
@@ -44,8 +59,8 @@ func GetQueue() (queue []QueueElement, err error) {
 }
 
 // DeleteQueueItem ...
-func DeleteQueueItem(id int) (err error) {
-	u := GetURL(APIQueueURL + "/" + strconv.Itoa(id)).String()
+func (a API) DeleteQueueItem(id int) (err error) {
+	u := a.getURL(APIQueueURL + "/" + strconv.Itoa(id)).String()
 	client := &http.Client{}
 	req, err := http.NewRequest("DELETE", u, nil)
 	if err != nil {
@@ -62,13 +77,13 @@ func DeleteQueueItem(id int) (err error) {
 }
 
 // GetHistory ...
-func GetHistory(page int) (history History, err error) {
-	u := GetURL(APIHistoryURL)
+func (a API) GetHistory(page int) (history History, err error) {
+	u := a.getURL(APIHistoryURL)
 	query := u.Query()
 	query.Add("page", strconv.Itoa(page))
 	query.Add("pageSize", "10")
 	u.RawQuery = query.Encode()
-	body, err := Get(u.String())
+	body, err := get(u.String())
 	if err != nil {
 		return
 	}
@@ -80,9 +95,9 @@ func GetHistory(page int) (history History, err error) {
 }
 
 // GetEpisode ...
-func GetEpisode(id int) (episode Episode, err error) {
-	u := GetURL(APIEpisodeURL + "/" + strconv.Itoa(id))
-	body, err := Get(u.String())
+func (a API) GetEpisode(id int) (episode Episode, err error) {
+	u := a.getURL(APIEpisodeURL + "/" + strconv.Itoa(id))
+	body, err := get(u.String())
 	if err != nil {
 		return
 	}
@@ -91,26 +106,26 @@ func GetEpisode(id int) (episode Episode, err error) {
 }
 
 // ExecuteCommand ...
-func ExecuteCommand(c CommandBody) (cs CommandStatus, err error) {
+func (a API) ExecuteCommand(c CommandBody) (cs CommandStatus, err error) {
 	j, err := json.Marshal(c)
 	if err != nil {
 		return
 	}
-	body, err := Post(GetURL(APICommandURL).String(), bytes.NewReader(j))
+	body, err := post(a.getURL(APICommandURL).String(), bytes.NewReader(j))
 	err = json.Unmarshal(body, &cs)
 	return
 }
 
 // ExecuteCommandAndWait ...
-func ExecuteCommandAndWait(c CommandBody) (cs CommandStatus, err error) {
-	cs, err = ExecuteCommand(c)
+func (a API) ExecuteCommandAndWait(c CommandBody) (cs CommandStatus, err error) {
+	cs, err = a.ExecuteCommand(c)
 	if err != nil {
 		return
 	}
 	totalWait := CheckInterval
 	for totalWait <= MaxTime {
 		time.Sleep(CheckInterval)
-		cs, err = GetCommandStatus(cs.ID)
+		cs, err = a.GetCommandStatus(cs.ID)
 		if err == nil {
 			if cs.State == CommandStateCompleted {
 				log.Printf("finished %s successfully", c.Name)
@@ -123,9 +138,9 @@ func ExecuteCommandAndWait(c CommandBody) (cs CommandStatus, err error) {
 }
 
 // GetCommandStatus ...
-func GetCommandStatus(id int) (cs CommandStatus, err error) {
-	u := GetURL(APICommandURL + "/" + strconv.Itoa(id))
-	body, err := Get(u.String())
+func (a API) GetCommandStatus(id int) (cs CommandStatus, err error) {
+	u := a.getURL(APICommandURL + "/" + strconv.Itoa(id))
+	body, err := get(u.String())
 	if err != nil {
 		return
 	}
@@ -133,8 +148,8 @@ func GetCommandStatus(id int) (cs CommandStatus, err error) {
 	return
 }
 
-// Get Wrapper for http.Get. Add authentication handling automatically.
-func Get(u string) (body []byte, err error) {
+// get Wrapper for http.Get. Add authentication handling automatically.
+func get(u string) (body []byte, err error) {
 	res, err := http.Get(u)
 	if err != nil {
 		return
@@ -147,8 +162,8 @@ func Get(u string) (body []byte, err error) {
 	return
 }
 
-// Post Wrapper for http.Post. Add authentication handling automatically.
-func Post(u string, bodyReq io.Reader) (body []byte, err error) {
+// post Wrapper for http.Post. Add authentication handling automatically.
+func post(u string, bodyReq io.Reader) (body []byte, err error) {
 	res, err := http.Post(u, "application/json", bodyReq)
 	if err != nil {
 		return
@@ -159,4 +174,16 @@ func Post(u string, bodyReq io.Reader) (body []byte, err error) {
 	defer res.Body.Close()
 	body, err = ioutil.ReadAll(res.Body)
 	return
+}
+
+func (a API) getURL(path string) *url.URL {
+	u := &url.URL{
+		Scheme: "http",
+		Host:   a.URL,
+		Path:   path,
+	}
+	q := u.Query()
+	q.Set("apikey", a.APIKey)
+	u.RawQuery = q.Encode()
+	return u
 }
