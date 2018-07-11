@@ -65,7 +65,7 @@ func (s Media) GuessFileName() (string, error) {
 			if validExtensions[extension] {
 				return message.Title, nil
 			}
-			fmt.Printf("is not a valid file, skipping: %s\n", message.Title)
+			log.Printf("is not a valid file, skipping: %s\n", message.Title)
 		}
 	}
 	return "", fmt.Errorf("imposible to guess file name for %s", s.QueueElement.Title)

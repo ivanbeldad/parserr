@@ -100,22 +100,24 @@ func (e Episode) String() string {
 
 // Series ...
 type Series struct {
+	ID    int
 	Title string
 	Path  string
 }
 
 func (s Series) String() string {
-	return fmt.Sprintf("Series\nTitle: %s\nPath: %s\n", s.Title, s.Path)
+	return fmt.Sprintf("Series\nID: %d\nTitle: %s\nPath: %s\n", s.ID, s.Title, s.Path)
 }
 
 // Movie ...
 type Movie struct {
+	ID    int
 	Title string
 	Path  string
 }
 
 func (m Movie) String() string {
-	return fmt.Sprintf("Movie\nTitle: %s\nPath: %s\n", m.Title, m.Path)
+	return fmt.Sprintf("Movie\nID: %d\nTitle: %s\nPath: %s\n", m.ID, m.Title, m.Path)
 }
 
 // Quality ...
@@ -167,10 +169,28 @@ func (c CommandStatus) String() string {
 
 // CommandBody ...
 type CommandBody struct {
-	Name string `json:"name"`
+	Name      string `json:"name"`
+	SeriesIds []int  `json:"seriesIds,omitempty"`
+	MovieIds  []int  `json:"movieIds,omitempty"`
 }
 
 // NewRescanSeriesCommand Create a command instance to force to rescan series form disk
 func NewRescanSeriesCommand() CommandBody {
 	return CommandBody{Name: "RescanSeries"}
+}
+
+// NewRenameSeriesCommand ...
+func NewRenameSeriesCommand(ids []int) CommandBody {
+	return CommandBody{
+		Name:      "RenameSeries",
+		SeriesIds: ids,
+	}
+}
+
+// NewRenameMoviesCommand ...
+func NewRenameMoviesCommand(ids []int) CommandBody {
+	return CommandBody{
+		Name:     "RenameMovies",
+		MovieIds: ids,
+	}
 }

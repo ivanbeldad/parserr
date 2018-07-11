@@ -35,8 +35,6 @@ func loadFailedMediaFiles(a api.API) ([]*api.Media, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("%s", queue)
-	fmt.Printf("%s", history)
 	for i := 0; i < len(queue); i++ {
 		isNotCompleted := queue[i].Status != api.StatusCompleted
 		isNotFailed := queue[i].TrackedDownloadStatus != api.TrackedDownloadStatusWarning
