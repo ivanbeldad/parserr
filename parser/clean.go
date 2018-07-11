@@ -9,8 +9,15 @@ import (
 
 // CleanFixedShows ...
 func CleanFixedShows(a api.API, mediaFiles []*api.Media) error {
-	log.Printf("executing rescan series")
-	_, err := a.ExecuteCommandAndWait(api.NewRescanSeriesCommand())
+	var err error
+	if len(mediaFiles) == 0 {
+		return nil
+	}
+	if mediaFiles[0].Type == api.TypeMovie {
+		_, err = a.ExecuteCommandAndWait(api.NewRescanMovieCommand())
+	} else {
+		_, err = a.ExecuteCommandAndWait(api.NewRescanSeriesCommand())
+	}
 	if err != nil {
 		return err
 	}
@@ -26,7 +33,7 @@ func CleanFixedShows(a api.API, mediaFiles []*api.Media) error {
 				log.Print(err)
 				errors = append(errors, err.Error())
 			} else {
-				log.Printf("episode cleared from the queue: %s", s.QueueElement.Title)
+				log.Printf("file cleared from the queue: %s", s.QueueElement.Title)
 			}
 		}
 	}

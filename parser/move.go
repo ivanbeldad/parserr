@@ -45,7 +45,7 @@ func loadFailedMediaFiles(a api.API) ([]*api.Media, error) {
 		for _, hr := range history.Records {
 			if itsTheSame(queue[i], hr) {
 				found = true
-				newMediaFile := api.Media{HistoryRecord: hr, QueueElement: queue[i]}
+				newMediaFile := api.NewMedia(hr, queue[i])
 				mediaFiles = append(mediaFiles, &newMediaFile)
 				log.Printf("failed media file detected: %s", queue[i].Title)
 			}

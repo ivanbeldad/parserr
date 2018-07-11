@@ -25,6 +25,19 @@ type Media struct {
 	Type           string
 }
 
+// NewMedia Generate a new Media struct with correct type
+func NewMedia(hr HistoryRecord, qe QueueElement) (m Media) {
+	if qe.Movie.Title != "" {
+		m.Type = TypeMovie
+	}
+	if qe.Series.Title != "" {
+		m.Type = TypeShow
+	}
+	m.HistoryRecord = hr
+	m.QueueElement = qe
+	return m
+}
+
 // IsBroken ...
 func (s Media) IsBroken() bool {
 	return s.HistoryRecord.TrackedDownloadStatus == TrackedDownloadStatusWarning
@@ -33,12 +46,23 @@ func (s Media) IsBroken() bool {
 // HasBeenDetected Return true if the show has been detected,
 // false otherwise (including errors)
 func (s Media) HasBeenDetected(a API) bool {
-	ep, err := a.GetEpisode(s.QueueElement.Episode.ID)
-	if err != nil {
-		log.Printf("cannot detect if episode %s has been detected", s.QueueElement.Title)
-		return false
+	if s.Type == TypeMovie {
+		movie, err := a.GetMovie(s.QueueElement.Movie.ID)
+		if err != nil {
+			log.Printf("cannot detect if movie %s has been detected", s.QueueElement.Title)
+			return false
+		}
+		return movie.HasFile
 	}
-	return ep.HasFile
+	if s.Type == TypeShow {
+		ep, err := a.GetEpisode(s.QueueElement.Episode.ID)
+		if err != nil {
+			log.Printf("cannot detect if episode %s has been detected", s.QueueElement.Title)
+			return false
+		}
+		return ep.HasFile
+	}
+	return false
 }
 
 // DeleteFile Removes the file wherever the show is located
@@ -55,6 +79,16 @@ func (s Media) DeleteFile() error {
 
 // GuessFileName ...
 func (s Media) GuessFileName() (string, error) {
+	if s.Type == TypeMovie {
+		return guessMovieFileName(s)
+	}
+	if s.Type == TypeShow {
+		return guessShowFileName(s)
+	}
+	return "", fmt.Errorf("cannot guess filename of unrecognized media type: %s", s.Type)
+}
+
+func guessShowFileName(s Media) (string, error) {
 	episode := s.QueueElement.Episode
 	regexString := fmt.Sprintf("%d.{0,4}%d", episode.SeasonNumber, episode.EpisodeNumber)
 	regex := regexp.MustCompile(regexString)
@@ -67,6 +101,18 @@ func (s Media) GuessFileName() (string, error) {
 			}
 			log.Printf("is not a valid file, skipping: %s\n", message.Title)
 		}
+	}
+	return "", fmt.Errorf("imposible to guess file name for %s", s.QueueElement.Title)
+}
+
+func guessMovieFileName(s Media) (string, error) {
+	for _, message := range s.QueueElement.StatusMessages {
+		extension := filepath.Ext(message.Title)
+		validExtensions := map[string]bool{".mkv": true, ".mp4": true, ".avi": true}
+		if validExtensions[extension] {
+			return message.Title, nil
+		}
+		log.Printf("is not a valid file, skipping: %s\n", message.Title)
 	}
 	return "", fmt.Errorf("imposible to guess file name for %s", s.QueueElement.Title)
 }

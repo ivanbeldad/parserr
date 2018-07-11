@@ -24,6 +24,8 @@ const (
 	APIHistoryURL = APIURL + "/history"
 	// APIEpisodeURL ...
 	APIEpisodeURL = APIURL + "/episode"
+	// APIMovieURL ...
+	APIMovieURL = APIURL + "/movie"
 	// StatusCompleted ...
 	StatusCompleted = "Completed"
 	// TrackedDownloadStatusWarning ...
@@ -104,6 +106,17 @@ func (a API) GetEpisode(id int) (episode Episode, err error) {
 		return
 	}
 	err = json.Unmarshal(body, &episode)
+	return
+}
+
+// GetMovie ...
+func (a API) GetMovie(id int) (movie Movie, err error) {
+	u := a.getURL(APIMovieURL + "/" + strconv.Itoa(id))
+	body, err := get(u.String())
+	if err != nil {
+		return
+	}
+	err = json.Unmarshal(body, &movie)
 	return
 }
 

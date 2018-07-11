@@ -111,13 +111,15 @@ func (s Series) String() string {
 
 // Movie ...
 type Movie struct {
-	ID    int
-	Title string
-	Path  string
+	ID      int
+	Title   string
+	Path    string
+	HasFile bool
 }
 
 func (m Movie) String() string {
-	return fmt.Sprintf("Movie\nID: %d\nTitle: %s\nPath: %s\n", m.ID, m.Title, m.Path)
+	format := "Movie\nID: %d\nTitle: %s\nPath: %s\nHasFile: %v\n"
+	return fmt.Sprintf(format, m.ID, m.Title, m.Path, m.HasFile)
 }
 
 // Quality ...
@@ -160,7 +162,7 @@ func (c Command) String() string {
 // CommandStatus ...
 type CommandStatus struct {
 	Command
-	State string
+	State string `json:"state"`
 }
 
 func (c CommandStatus) String() string {
@@ -174,9 +176,19 @@ type CommandBody struct {
 	MovieIds  []int  `json:"movieIds,omitempty"`
 }
 
+func (c CommandBody) String() string {
+	format := "Command\nName: %s\nSeriesIds: %s\nMovieIds: %s\n"
+	return fmt.Sprintf(format, c.Name, c.SeriesIds, c.MovieIds)
+}
+
 // NewRescanSeriesCommand Create a command instance to force to rescan series form disk
 func NewRescanSeriesCommand() CommandBody {
 	return CommandBody{Name: "RescanSeries"}
+}
+
+// NewRescanMovieCommand Create a command instance to force to rescan movies form disk
+func NewRescanMovieCommand() CommandBody {
+	return CommandBody{Name: "RescanMovie"}
 }
 
 // NewRenameSeriesCommand ...
