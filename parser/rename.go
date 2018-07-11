@@ -44,7 +44,7 @@ func getMoviesIds(a api.API, mediaFiles []*api.Media) (fixedMoviesIds []int) {
 func getShowsIds(a api.API, mediaFiles []*api.Media) (fixedShowsIds []int) {
 	for _, file := range mediaFiles {
 		if file.HasBeenRenamed && file.HasBeenDetected(a) {
-			if file.Type == api.TypeMovie {
+			if file.Type == api.TypeShow {
 				fixedShowsIds = append(fixedShowsIds, file.QueueElement.Series.ID)
 			}
 		}
