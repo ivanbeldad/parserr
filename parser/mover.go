@@ -10,13 +10,13 @@ import (
 )
 
 // FixFailedShows ...
-func FixFailedShows(a api.API, downloadFolder string, m Move) ([]*api.Media, error) {
+func FixFailedShows(a api.API, m Move) ([]*api.Media, error) {
 	shows, err := loadFailedShows(a)
 	if err != nil {
 		return nil, err
 	}
 	for _, s := range shows {
-		err = fixNaming(s, m, downloadFolder)
+		err = fixNaming(s, m, a.DownloadFolder)
 		if err != nil {
 			log.Printf("error fixing show %s: %s", s.QueueElement.Title, err.Error())
 		}

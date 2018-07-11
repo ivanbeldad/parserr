@@ -36,15 +36,17 @@ const (
 
 // API ..
 type API struct {
-	URL    string
-	APIKey string
+	URL            string
+	APIKey         string
+	DownloadFolder string
 }
 
 // NewAPI Return an instance of an API
-func NewAPI(URL, APIKey string) API {
+func NewAPI(url, apiKey, downloadFolder string) API {
 	return API{
-		URL:    URL,
-		APIKey: APIKey,
+		URL:            url,
+		APIKey:         apiKey,
+		DownloadFolder: downloadFolder,
 	}
 }
 

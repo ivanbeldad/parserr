@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 )
@@ -59,7 +60,12 @@ func (s Media) GuessFileName() (string, error) {
 	regex := regexp.MustCompile(regexString)
 	for _, message := range s.QueueElement.StatusMessages {
 		if regex.MatchString(message.Title) {
-			return message.Title, nil
+			extension := filepath.Ext(message.Title)
+			validExtensions := map[string]bool{".mkv": true, ".mp4": true, ".avi": true}
+			if validExtensions[extension] {
+				return message.Title, nil
+			}
+			fmt.Printf("is not a valid file, skipping: %s\n", message.Title)
 		}
 	}
 	return "", fmt.Errorf("imposible to guess file name for %s", s.QueueElement.Title)
