@@ -8,7 +8,7 @@ import (
 )
 
 // CleanFixedShows ...
-func CleanFixedShows(a api.API, shows []*Show) error {
+func CleanFixedShows(a api.API, shows []*api.Media) error {
 	log.Printf("executing rescan series")
 	_, err := a.ExecuteCommandAndWait(api.NewRescanSeriesCommand())
 	if err != nil {

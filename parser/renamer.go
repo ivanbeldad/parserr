@@ -4,18 +4,19 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"sonarr-parser-helper/api"
 )
 
 // FixFailedShows ...
-func FixFailedShows(a api.API, m Move) ([]*Show, error) {
+func FixFailedShows(a api.API, m Move) ([]*api.Media, error) {
 	shows, err := loadFailedShows(a)
 	if err != nil {
 		return nil, err
 	}
 	for _, s := range shows {
-		err = s.FixNaming(m)
+		err = FixNaming(s, m)
 		if err != nil {
 			log.Printf("error fixing show %s: %s", s.QueueElement.Title, err.Error())
 		}
@@ -24,8 +25,8 @@ func FixFailedShows(a api.API, m Move) ([]*Show, error) {
 }
 
 // loadFailedShows ...
-func loadFailedShows(a api.API) ([]*Show, error) {
-	shows := make([]*Show, 0)
+func loadFailedShows(a api.API) ([]*api.Media, error) {
+	shows := make([]*api.Media, 0)
 	queue, err := a.GetQueue()
 	if err != nil {
 		return nil, err
@@ -34,6 +35,8 @@ func loadFailedShows(a api.API) ([]*Show, error) {
 	if err != nil {
 		return nil, err
 	}
+	fmt.Printf("%s", queue)
+	fmt.Printf("%s", history)
 	for i := 0; i < len(queue); i++ {
 		isNotCompleted := queue[i].Status != api.StatusCompleted
 		isNotFailed := queue[i].TrackedDownloadStatus != api.TrackedDownloadStatusWarning
@@ -47,7 +50,7 @@ func loadFailedShows(a api.API) ([]*Show, error) {
 			sameSeason := queue[i].Episode.SeasonNumber == he.Episode.SeasonNumber
 			if sameDownloadID && sameSeason && sameEpisode {
 				found = true
-				newShow := Show{HistoryRecord: he, QueueElement: queue[i]}
+				newShow := api.Media{HistoryRecord: he, QueueElement: queue[i]}
 				shows = append(shows, &newShow)
 				log.Printf("failed show detected: %s", queue[i].Title)
 			}
@@ -61,6 +64,31 @@ func loadFailedShows(a api.API) ([]*Show, error) {
 		}
 	}
 	return shows, nil
+}
+
+// FixNaming Try to rename downloaded files to the original
+// torrent name.
+func FixNaming(s *api.Media, m Move) error {
+	filename, err := s.GuessFileName()
+	if err != nil {
+		return err
+	}
+	oldPath, err := locationOfFile(os.Getenv(api.EnvSonarrDownloadFolder), filename)
+	if err != nil {
+		return err
+	}
+	finalName, err := s.GuessFinalName(filename)
+	if err != nil {
+		return err
+	}
+	newPath := path.Join(s.QueueElement.Series.Path, finalName+filepath.Ext(oldPath))
+	log.Printf("renaming %s to %s", oldPath, newPath)
+	err = m.Move(oldPath, newPath)
+	if err != nil {
+		return err
+	}
+	s.HasBeenRenamed = true
+	return nil
 }
 
 func addPageToHistory(a api.API, h api.History) (api.History, error) {

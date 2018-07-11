@@ -1,57 +1,29 @@
-package parser
+package api
 
 import (
 	"fmt"
 	"log"
 	"os"
-	"path"
-	"path/filepath"
 	"regexp"
-	"sonarr-parser-helper/api"
 	"strings"
 )
 
-// Show ...
-type Show struct {
-	HistoryRecord  api.HistoryRecord
-	QueueElement   api.QueueElement
+// Media ...
+type Media struct {
+	HistoryRecord  HistoryRecord
+	QueueElement   QueueElement
 	HasBeenRenamed bool
 	FileLocation   string
 }
 
 // IsBroken ...
-func (s Show) IsBroken() bool {
-	return s.HistoryRecord.TrackedDownloadStatus == api.TrackedDownloadStatusWarning
-}
-
-// FixNaming Try to rename downloaded files to the original
-// torrent name.
-func (s *Show) FixNaming(m Move) error {
-	filename, err := s.guessFileName()
-	if err != nil {
-		return err
-	}
-	oldPath, err := locationOfFile(os.Getenv(api.EnvSonarrDownloadFolder), filename)
-	if err != nil {
-		return err
-	}
-	finalName, err := s.guessFinalName(filename)
-	if err != nil {
-		return err
-	}
-	newPath := path.Join(s.QueueElement.Series.Path, finalName+filepath.Ext(oldPath))
-	log.Printf("renaming %s to %s", oldPath, newPath)
-	err = m.Move(oldPath, newPath)
-	if err != nil {
-		return err
-	}
-	s.HasBeenRenamed = true
-	return nil
+func (s Media) IsBroken() bool {
+	return s.HistoryRecord.TrackedDownloadStatus == TrackedDownloadStatusWarning
 }
 
 // HasBeenDetected Return true if the show has been detected,
 // false otherwise (including errors)
-func (s Show) HasBeenDetected(a api.API) bool {
+func (s Media) HasBeenDetected(a API) bool {
 	ep, err := a.GetEpisode(s.QueueElement.Episode.ID)
 	if err != nil {
 		log.Printf("cannot detect if episode %s has been detected", s.QueueElement.Title)
@@ -61,7 +33,7 @@ func (s Show) HasBeenDetected(a api.API) bool {
 }
 
 // DeleteFile Removes the file wherever the show is located
-func (s Show) DeleteFile() error {
+func (s Media) DeleteFile() error {
 	if s.FileLocation == "" {
 		return fmt.Errorf("cannot delete %s because destiny path is empty", s.QueueElement.Title)
 	}
@@ -72,7 +44,8 @@ func (s Show) DeleteFile() error {
 	return err
 }
 
-func (s Show) guessFileName() (string, error) {
+// GuessFileName ...
+func (s Media) GuessFileName() (string, error) {
 	episode := s.QueueElement.Episode
 	regexString := fmt.Sprintf("%d.{0,4}%d", episode.SeasonNumber, episode.EpisodeNumber)
 	regex := regexp.MustCompile(regexString)
@@ -84,7 +57,7 @@ func (s Show) guessFileName() (string, error) {
 	return "", fmt.Errorf("imposible to guess file name for %s", s.QueueElement.Title)
 }
 
-func (s Show) guessFinalName(filename string) (string, error) {
+func (s Media) GuessFinalName(filename string) (string, error) {
 	finalTitle := s.HistoryRecord.SourceTitle
 	if len(s.QueueElement.StatusMessages) == 1 {
 		return finalTitle, nil
