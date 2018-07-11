@@ -1,8 +1,10 @@
-# Sonarr parser helper
+# Parserr
 
-File sync and share cloud API
+Parserr is a tool to check Sonarr and Radarr failed movies/shows, and force to
+rename them so they can import without hesitate.
+It also auto extract rar/zip files.
 
 ## License
 
-Sonarr parser helper is open-sourced software licensed under
-the [MIT license](https://github.com/ivandelabeldad/sonarr-parser-helper/blob/master/LICENSE).
+Parserr is open-sourced software licensed under
+the [MIT license](https://github.com/ivandelabeldad/parserr/blob/master/LICENSE).
