@@ -10,13 +10,13 @@ import (
 )
 
 // FixFailedShows ...
-func FixFailedShows(a api.API, m Move) ([]*api.Media, error) {
+func FixFailedShows(a api.API, downloadFolder string, m Move) ([]*api.Media, error) {
 	shows, err := loadFailedShows(a)
 	if err != nil {
 		return nil, err
 	}
 	for _, s := range shows {
-		err = FixNaming(s, m)
+		err = fixNaming(s, m, downloadFolder)
 		if err != nil {
 			log.Printf("error fixing show %s: %s", s.QueueElement.Title, err.Error())
 		}
@@ -44,13 +44,10 @@ func loadFailedShows(a api.API) ([]*api.Media, error) {
 			continue
 		}
 		found := false
-		for _, he := range history.Records {
-			sameDownloadID := queue[i].DownloadID == he.DownloadID
-			sameEpisode := queue[i].Episode.EpisodeNumber == he.Episode.EpisodeNumber
-			sameSeason := queue[i].Episode.SeasonNumber == he.Episode.SeasonNumber
-			if sameDownloadID && sameSeason && sameEpisode {
+		for _, hr := range history.Records {
+			if itsTheSame(queue[i], hr) {
 				found = true
-				newShow := api.Media{HistoryRecord: he, QueueElement: queue[i]}
+				newShow := api.Media{HistoryRecord: hr, QueueElement: queue[i]}
 				shows = append(shows, &newShow)
 				log.Printf("failed show detected: %s", queue[i].Title)
 			}
@@ -66,14 +63,21 @@ func loadFailedShows(a api.API) ([]*api.Media, error) {
 	return shows, nil
 }
 
-// FixNaming Try to rename downloaded files to the original
+func itsTheSame(qe api.QueueElement, hr api.HistoryRecord) bool {
+	sameDownloadID := qe.DownloadID == hr.DownloadID
+	sameEpisode := qe.Episode.EpisodeNumber == hr.Episode.EpisodeNumber
+	sameSeason := qe.Episode.SeasonNumber == hr.Episode.SeasonNumber
+	return sameDownloadID && sameSeason && sameEpisode
+}
+
+// fixNaming Try to rename downloaded files to the original
 // torrent name.
-func FixNaming(s *api.Media, m Move) error {
+func fixNaming(s *api.Media, m Move, downloadFolder string) error {
 	filename, err := s.GuessFileName()
 	if err != nil {
 		return err
 	}
-	oldPath, err := locationOfFile(os.Getenv(api.EnvSonarrDownloadFolder), filename)
+	oldPath, err := locationOfFile(downloadFolder, filename)
 	if err != nil {
 		return err
 	}
@@ -81,7 +85,7 @@ func FixNaming(s *api.Media, m Move) error {
 	if err != nil {
 		return err
 	}
-	newPath := path.Join(s.QueueElement.Series.Path, finalName+filepath.Ext(oldPath))
+	newPath := path.Join(s.QueueElement.Path(), finalName+filepath.Ext(oldPath))
 	log.Printf("renaming %s to %s", oldPath, newPath)
 	err = m.Move(oldPath, newPath)
 	if err != nil {

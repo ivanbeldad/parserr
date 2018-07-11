@@ -3,7 +3,9 @@ package parser
 import (
 	"fmt"
 	"io"
+	"log"
 	"os"
+	"path/filepath"
 )
 
 // Move Move file from path to path.
@@ -24,6 +26,13 @@ type DiskMove struct{}
 
 // Move ...
 func (m DiskMove) Move(sourcePath, destPath string) error {
+	destPathDir := filepath.Dir(destPath)
+	if _, err := os.Stat(destPathDir); os.IsNotExist(err) {
+		err := os.MkdirAll(destPathDir, os.ModeDir)
+		if err != nil {
+			return err
+		}
+	}
 	inputFile, err := os.Open(sourcePath)
 	if err != nil {
 		return fmt.Errorf("couldn't open source file: %s", err)
@@ -51,6 +60,6 @@ type FakeMove struct{}
 
 // Move ...
 func (m FakeMove) Move(from, to string) error {
-	fmt.Printf("moveing from %s to %s", from, to)
+	log.Printf("fake moving\n\tfrom: %s\n\tto:   %s", from, to)
 	return nil
 }

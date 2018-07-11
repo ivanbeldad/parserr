@@ -21,7 +21,9 @@ func createAPI() api.API {
 
 func testRadarr() {
 	a := createAPI()
-	_, err := parser.FixFailedShows(a, parser.FakeMove{})
+	downloadFolder := os.Getenv("DOWNLOAD_FOLDER")
+	move := parser.DiskMove{}
+	_, err := parser.FixFailedShows(a, downloadFolder, move)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -29,8 +31,9 @@ func testRadarr() {
 
 func check() {
 	a := createAPI()
+	downloadFolder := os.Getenv("DOWNLOAD_FOLDER")
 	parser.ExtractAll(os.Getenv(api.EnvSonarrDownloadFolder))
-	shows, err := parser.FixFailedShows(a, parser.FakeMove{})
+	shows, err := parser.FixFailedShows(a, downloadFolder, parser.FakeMove{})
 	if err != nil {
 		log.Printf("error fixing shows: %s", err.Error())
 		return

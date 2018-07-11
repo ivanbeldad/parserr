@@ -9,6 +9,12 @@ const (
 	EnvSonarrAPIKey = "SONARR_APIKEY"
 	// EnvSonarrDownloadFolder ...
 	EnvSonarrDownloadFolder = "SONARR_DOWNLOAD_FOLDER"
+	// EnvRadarrURL ...
+	EnvRadarrURL = "RADARR_URL"
+	// EnvRadarrAPIKey ...
+	EnvRadarrAPIKey = "RADARR_APIKEY"
+	// EnvRadarrDownloadFolder ...
+	EnvRadarrDownloadFolder = "RADARR_DOWNLOAD_FOLDER"
 	// StatusWarning ...
 	StatusWarning = "Warning"
 	// CommandStateCompleted ...
@@ -21,14 +27,23 @@ type HistoryRecord struct {
 	SourceTitle           string
 	Status                string
 	TrackedDownloadStatus string
+	Movie                 Movie
 	Series                Series
 	Episode               Episode
 	Quality               Quality
 }
 
 func (h HistoryRecord) String() string {
-	format := "HistoryRecord\nDownloadID: %s\nSourceTitle: %s\nStatus: %s\nTrackedDownloadStatus: %s\n%s%s%s\n"
-	return fmt.Sprintf(format, h.DownloadID, h.SourceTitle, h.Status, h.TrackedDownloadStatus, h.Series, h.Episode, h.Quality)
+	format := "HistoryRecord\nDownloadID: %s\nSourceTitle: %s\nStatus: %s\nTrackedDownloadStatus: %s\n%s%s%s%s\n"
+	return fmt.Sprintf(format, h.DownloadID, h.SourceTitle, h.Status, h.TrackedDownloadStatus, h.Movie, h.Series, h.Episode, h.Quality)
+}
+
+// Path Return the path of the movie / show
+func (h HistoryRecord) Path() string {
+	if h.Series.Path != "" {
+		return h.Series.Path
+	}
+	return h.Movie.Path
 }
 
 // QueueElement ...
@@ -38,6 +53,7 @@ type QueueElement struct {
 	Title                 string
 	Status                string
 	TrackedDownloadStatus string
+	Movie                 Movie
 	Series                Series
 	Episode               Episode
 	Quality               Quality
@@ -45,8 +61,16 @@ type QueueElement struct {
 }
 
 func (q QueueElement) String() string {
-	format := "QueueElement\nID: %d\nDownloadID: %s\nTitle: %s\nStatus: %s\nTrackedDownloadStatus: %s\n%s%s%s%s\n"
-	return fmt.Sprintf(format, q.ID, q.DownloadID, q.Title, q.Status, q.TrackedDownloadStatus, q.Series, q.Episode, q.Quality, q.StatusMessages)
+	format := "QueueElement\nID: %d\nDownloadID: %s\nTitle: %s\nStatus: %s\nTrackedDownloadStatus: %s\n%s%s%s%s%s\n"
+	return fmt.Sprintf(format, q.ID, q.DownloadID, q.Title, q.Status, q.TrackedDownloadStatus, q.Movie, q.Series, q.Episode, q.Quality, q.StatusMessages)
+}
+
+// Path Return the path of the movie / show
+func (q QueueElement) Path() string {
+	if q.Series.Path != "" {
+		return q.Series.Path
+	}
+	return q.Movie.Path
 }
 
 // History ...
@@ -82,6 +106,16 @@ type Series struct {
 
 func (s Series) String() string {
 	return fmt.Sprintf("Series\nTitle: %s\nPath: %s\n", s.Title, s.Path)
+}
+
+// Movie ...
+type Movie struct {
+	Title string
+	Path  string
+}
+
+func (m Movie) String() string {
+	return fmt.Sprintf("Movie\nTitle: %s\nPath: %s\n", m.Title, m.Path)
 }
 
 // Quality ...
