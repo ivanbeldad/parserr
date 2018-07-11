@@ -8,14 +8,14 @@ import (
 )
 
 // CleanFixedShows ...
-func CleanFixedShows(a api.API, shows []*api.Media) error {
+func CleanFixedShows(a api.API, mediaFiles []*api.Media) error {
 	log.Printf("executing rescan series")
 	_, err := a.ExecuteCommandAndWait(api.NewRescanSeriesCommand())
 	if err != nil {
 		return err
 	}
 	var errors []string
-	for _, s := range shows {
+	for _, s := range mediaFiles {
 		// TODO
 		// If there is no way to rename episode
 		// or it isn't been detected then
