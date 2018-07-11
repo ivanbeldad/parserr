@@ -2,128 +2,64 @@ package parser
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
-	"path"
 	"path/filepath"
-	"sonarr-parser-helper/api"
 )
 
-// FixFailedMediaFiles ...
-func FixFailedMediaFiles(a api.API, m Move) ([]*api.Media, error) {
-	mediaFiles, err := loadFailedMediaFiles(a)
-	if err != nil {
-		return nil, err
-	}
-	for _, s := range mediaFiles {
-		err = fixNaming(s, m, a.DownloadFolder)
+// Mover Mover file from path to path.
+type Mover interface {
+	Move(from, to string) error
+}
+
+// BasicMover ...
+type BasicMover struct{}
+
+// Move ...
+func (m BasicMover) Move(from, to string) error {
+	return os.Rename(from, to)
+}
+
+// DiskMover Move file between disks
+type DiskMover struct{}
+
+// Move ...
+func (m DiskMover) Move(sourcePath, destPath string) error {
+	destPathDir := filepath.Dir(destPath)
+	if _, err := os.Stat(destPathDir); os.IsNotExist(err) {
+		err := os.MkdirAll(destPathDir, os.ModeDir)
 		if err != nil {
-			log.Printf("error fixing file %s: %s", s.QueueElement.Title, err.Error())
+			return err
 		}
 	}
-	return mediaFiles, nil
-}
-
-// loadFailedMediaFiles ...
-func loadFailedMediaFiles(a api.API) ([]*api.Media, error) {
-	mediaFiles := make([]*api.Media, 0)
-	queue, err := a.GetQueue()
+	inputFile, err := os.Open(sourcePath)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("couldn't open source file: %s", err)
 	}
-	history, err := a.GetHistory(1)
+	outputFile, err := os.Create(destPath)
 	if err != nil {
-		return nil, err
+		inputFile.Close()
+		return fmt.Errorf("couldn't open dest file: %s", err)
 	}
-	for i := 0; i < len(queue); i++ {
-		isNotCompleted := queue[i].Status != api.StatusCompleted
-		isNotFailed := queue[i].TrackedDownloadStatus != api.TrackedDownloadStatusWarning
-		if isNotCompleted || isNotFailed {
-			continue
-		}
-		found := false
-		for _, hr := range history.Records {
-			if itsTheSame(queue[i], hr) {
-				found = true
-				newMediaFile := api.Media{HistoryRecord: hr, QueueElement: queue[i]}
-				mediaFiles = append(mediaFiles, &newMediaFile)
-				log.Printf("failed media file detected: %s", queue[i].Title)
-			}
-		}
-		if !found {
-			history, err = addPageToHistory(a, history)
-			if err != nil {
-				return nil, fmt.Errorf("%s, imposible to guess failed file", err)
-			}
-			i--
-		}
-	}
-	return mediaFiles, nil
-}
-
-func itsTheSame(qe api.QueueElement, hr api.HistoryRecord) bool {
-	sameDownloadID := qe.DownloadID == hr.DownloadID
-	sameEpisode := qe.Episode.EpisodeNumber == hr.Episode.EpisodeNumber
-	sameSeason := qe.Episode.SeasonNumber == hr.Episode.SeasonNumber
-	return sameDownloadID && sameSeason && sameEpisode
-}
-
-// fixNaming Try to rename downloaded files to the original
-// torrent name.
-func fixNaming(mediaFile *api.Media, m Move, downloadFolder string) error {
-	filename, err := mediaFile.GuessFileName()
+	defer outputFile.Close()
+	_, err = io.Copy(outputFile, inputFile)
+	inputFile.Close()
 	if err != nil {
-		return err
+		return fmt.Errorf("writing to output file failed: %s", err)
 	}
-	oldPath, err := locationOfFile(downloadFolder, filename)
+	err = os.Remove(sourcePath)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed removing original file: %s", err)
 	}
-	finalName, err := mediaFile.GuessFinalName(filename)
-	if err != nil {
-		return err
-	}
-	newPath := path.Join(mediaFile.QueueElement.Path(), finalName+filepath.Ext(oldPath))
-	log.Printf("renaming %s to %s", oldPath, newPath)
-	err = m.Move(oldPath, newPath)
-	if err != nil {
-		return err
-	}
-	mediaFile.HasBeenRenamed = true
 	return nil
 }
 
-func addPageToHistory(a api.API, h api.History) (api.History, error) {
-	newPage := h.Page + 1
-	newHistory, err := a.GetHistory(newPage)
-	if err != nil {
-		return h, err
-	}
-	h.Records = append(h.Records, newHistory.Records...)
-	h.Page = newPage
-	return h, nil
-}
+// FakeMover ...
+type FakeMover struct{}
 
-// locationOfFile Search recursively on root for a file with filename
-// and return its path
-func locationOfFile(root, filename string) (string, error) {
-	var location string
-	var err error
-	err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return nil
-		}
-		if info.Name() == filename {
-			location = path
-			return fmt.Errorf("ok")
-		}
-		return nil
-	})
-	if err != nil && err.Error() == "ok" {
-		err = nil
-	}
-	if location == "" {
-		err = fmt.Errorf("%s doesn't exists inside %s", filename, root)
-	}
-	return location, err
+// Move ...
+func (m FakeMover) Move(from, to string) error {
+	log.Printf("fake moving\n\tfrom: %s\n\tto:   %s", from, to)
+	return nil
 }
