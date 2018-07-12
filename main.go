@@ -5,9 +5,12 @@ import (
 	"os"
 	"sonarr-parser-helper/api"
 	"sonarr-parser-helper/parser"
+
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	godotenv.Load()
 	apis := getAPIs()
 	for _, a := range apis {
 		execute(a)
@@ -16,19 +19,19 @@ func main() {
 
 func execute(a api.RRAPI) {
 	parser.ExtractAll(a.GetDownloadFolder())
-	move := parser.DiskMover{}
-	files, err := parser.MoveFailedShows(a, move)
+	a.ExecuteCommandAndWait(a.CheckFinishedDownloadsCommand())
+	move := parser.BasicMover{}
+	files, err := parser.FailedMedia(a)
 	if err != nil {
 		log.Println(err)
+		return
 	}
-	err = parser.CleanFixedShows(a, files)
+	err = parser.FixFileNames(files, move, a.GetDownloadFolder())
 	if err != nil {
 		log.Println(err)
+		return
 	}
-	err = parser.Rename(a, files)
-	if err != nil {
-		log.Println(err)
-	}
+	a.ExecuteCommandAndWait(a.CheckFinishedDownloadsCommand())
 }
 
 func getAPIs() (apis []api.RRAPI) {
@@ -52,11 +55,10 @@ func sonarr() api.RRAPI {
 		log.Fatal("empty sonarr url")
 	}
 	log.Print("adding sonarr api")
-	return api.NewAPI(
+	return api.NewSonarr(
 		os.Getenv("SONARR_URL"),
 		os.Getenv("SONARR_APIKEY"),
-		os.Getenv("SONARR_DOWNLOAD_FOLDER"),
-		api.TypeShow)
+		os.Getenv("SONARR_DOWNLOAD_FOLDER"))
 }
 
 func radarr() api.RRAPI {
@@ -70,9 +72,8 @@ func radarr() api.RRAPI {
 		log.Fatal("empty radarr url")
 	}
 	log.Print("adding radarr api")
-	return api.NewAPI(
+	return api.NewRadarr(
 		os.Getenv("RADARR_URL"),
 		os.Getenv("RADARR_APIKEY"),
-		os.Getenv("RADARR_DOWNLOAD_FOLDER"),
-		api.TypeMovie)
+		os.Getenv("RADARR_DOWNLOAD_FOLDER"))
 }

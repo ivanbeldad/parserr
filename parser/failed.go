@@ -33,14 +33,14 @@ func FailedMedia(a api.RRAPI) ([]*api.Media, error) {
 				break
 			}
 			if !found {
-				err = addPageToHistoryv2(a, &history)
+				err = addPageToHistory(a, &history)
 			}
 		}
 	}
 	return mediaFiles, nil
 }
 
-func addPageToHistoryv2(a api.RRAPI, h *api.History) error {
+func addPageToHistory(a api.RRAPI, h *api.History) error {
 	h.Page = h.Page + 1
 	newHistory, err := a.GetHistory(h.Page)
 	if err != nil {

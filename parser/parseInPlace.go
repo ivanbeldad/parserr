@@ -37,7 +37,7 @@ func fixFileName(failedFile *api.Media, m Mover, downloadFolder string) error {
 		log.Printf("impossible to guess a final filename: %s", failedFile.QueueElement.Title)
 		return err
 	}
-	oldPath, err := locationOfFilev2(downloadFolder, filename)
+	oldPath, err := locationOfFile(downloadFolder, filename)
 	if err != nil {
 		log.Printf("impossible to get location of file: %s", failedFile.QueueElement.Title)
 		return err
@@ -85,7 +85,7 @@ func moveFileToFolder(oldpath string, m Mover) (dest string, err error) {
 
 // locationOfFile Search recursively on root for a file with filename
 // and return its complete path
-func locationOfFilev2(root, filename string) (location string, err error) {
+func locationOfFile(root, filename string) (location string, err error) {
 	err = filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return nil
