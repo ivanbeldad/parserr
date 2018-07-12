@@ -41,14 +41,16 @@ type API struct {
 	URL            string
 	APIKey         string
 	DownloadFolder string
+	Type           string
 }
 
 // NewAPI Return an instance of an API
-func NewAPI(url, apiKey, downloadFolder string) API {
+func NewAPI(url, apiKey, downloadFolder, apiType string) API {
 	return API{
 		URL:            url,
 		APIKey:         apiKey,
 		DownloadFolder: downloadFolder,
+		Type:           apiType,
 	}
 }
 

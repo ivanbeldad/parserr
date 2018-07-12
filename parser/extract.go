@@ -35,7 +35,7 @@ func ExtractAll(rootDir string) error {
 			log.Printf("error removing rar: %s", err)
 		}
 		log.Printf("compressed file removed: %s", file.Name())
-		return
+		return nil
 	})
 	if len(errors) > 0 {
 		return fmt.Errorf(strings.Join(errors, ", "))

@@ -13,9 +13,10 @@ func CleanFixedShows(a api.API, mediaFiles []*api.Media) error {
 	if len(mediaFiles) == 0 {
 		return nil
 	}
-	if mediaFiles[0].Type == api.TypeMovie {
+	if a.Type == api.TypeMovie {
 		_, err = a.ExecuteCommandAndWait(api.NewRescanMovieCommand())
-	} else {
+	}
+	if a.Type == api.TypeShow {
 		_, err = a.ExecuteCommandAndWait(api.NewRescanSeriesCommand())
 	}
 	if err != nil {

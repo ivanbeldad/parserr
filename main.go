@@ -54,7 +54,8 @@ func sonarr() api.API {
 	return api.NewAPI(
 		os.Getenv("SONARR_URL"),
 		os.Getenv("SONARR_APIKEY"),
-		os.Getenv("SONARR_DOWNLOAD_FOLDER"))
+		os.Getenv("SONARR_DOWNLOAD_FOLDER"),
+		api.TypeShow)
 }
 
 func radarr() api.API {
@@ -70,5 +71,6 @@ func radarr() api.API {
 	return api.NewAPI(
 		os.Getenv("SONARR_URL"),
 		os.Getenv("SONARR_APIKEY"),
-		os.Getenv("SONARR_DOWNLOAD_FOLDER"))
+		os.Getenv("SONARR_DOWNLOAD_FOLDER"),
+		api.TypeMovie)
 }
