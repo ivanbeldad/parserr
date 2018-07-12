@@ -102,7 +102,7 @@ func guessShowFileName(s Media) (string, error) {
 			log.Printf("is not a valid file, skipping: %s\n", message.Title)
 		}
 	}
-	return "", fmt.Errorf("imposible to guess file name for %s", s.QueueElement.Title)
+	return "", fmt.Errorf("impossible to guess file name for %s", s.QueueElement.Title)
 }
 
 func guessMovieFileName(s Media) (string, error) {
@@ -114,7 +114,7 @@ func guessMovieFileName(s Media) (string, error) {
 		}
 		log.Printf("is not a valid file, skipping: %s\n", message.Title)
 	}
-	return "", fmt.Errorf("imposible to guess file name for %s", s.QueueElement.Title)
+	return "", fmt.Errorf("impossible to guess file name for %s", s.QueueElement.Title)
 }
 
 // GuessFinalName ...
