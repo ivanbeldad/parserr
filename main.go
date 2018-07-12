@@ -69,8 +69,8 @@ func radarr() api.API {
 		log.Fatal("empty radarr url")
 	}
 	return api.NewAPI(
-		os.Getenv("SONARR_URL"),
-		os.Getenv("SONARR_APIKEY"),
-		os.Getenv("SONARR_DOWNLOAD_FOLDER"),
+		os.Getenv("RADARR_URL"),
+		os.Getenv("RADARR_APIKEY"),
+		os.Getenv("RADARR_DOWNLOAD_FOLDER"),
 		api.TypeMovie)
 }
