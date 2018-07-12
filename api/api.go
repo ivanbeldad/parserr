@@ -41,12 +41,9 @@ type Scanneable interface {
 	ScanCommand() CommandBody
 }
 
-// API ..
-type API struct {
-	URL            string
-	APIKey         string
-	DownloadFolder string
-	Type           string
+// Renameable Can execute Scan to check new files
+type Renameable interface {
+	RenameCommand(ids []int) CommandBody
 }
 
 // Config ...
@@ -55,6 +52,29 @@ type Config interface {
 	GetAPIKey() string
 	GetDownloadFolder() string
 	GetType() string
+}
+
+// RRAPI Complete Sonarr/Radarr API
+type RRAPI interface {
+	Config
+	Scanneable
+	Renameable
+	GetQueue() (queue []QueueElement, err error)
+	DeleteQueueItem(id int) error
+	GetHistory(page int) (history History, err error)
+	GetEpisode(id int) (episode Episode, err error)
+	GetMovie(id int) (movie Movie, err error)
+	ExecuteCommand(c CommandBody) (cs CommandStatus, err error)
+	ExecuteCommandAndWait(c CommandBody) (cs CommandStatus, err error)
+	GetCommandStatus(id int) (cs CommandStatus, err error)
+}
+
+// API ..
+type API struct {
+	URL            string
+	APIKey         string
+	DownloadFolder string
+	Type           string
 }
 
 // GetURL ...
@@ -77,20 +97,6 @@ func (a API) GetType() string {
 	return a.Type
 }
 
-// RRAPI Complete Sonarr/Radarr API
-type RRAPI interface {
-	Config
-	Scanneable
-	GetQueue() (queue []QueueElement, err error)
-	DeleteQueueItem(id int) error
-	GetHistory(page int) (history History, err error)
-	GetEpisode(id int) (episode Episode, err error)
-	GetMovie(id int) (movie Movie, err error)
-	ExecuteCommand(c CommandBody) (cs CommandStatus, err error)
-	ExecuteCommandAndWait(c CommandBody) (cs CommandStatus, err error)
-	GetCommandStatus(id int) (cs CommandStatus, err error)
-}
-
 // Sonarr ...
 type Sonarr struct{ API }
 
@@ -105,6 +111,22 @@ func (s Sonarr) ScanCommand() CommandBody {
 // ScanCommand Create a command instance to force to rescan movies form disk
 func (r Radarr) ScanCommand() CommandBody {
 	return CommandBody{Name: "RescanMovie"}
+}
+
+// RenameCommand ...
+func (s Sonarr) RenameCommand(ids []int) CommandBody {
+	return CommandBody{
+		Name:      "RenameSeries",
+		SeriesIds: ids,
+	}
+}
+
+// RenameCommand ...
+func (r Radarr) RenameCommand(ids []int) CommandBody {
+	return CommandBody{
+		Name:     "RenameMovies",
+		MovieIds: ids,
+	}
 }
 
 // NewAPI Return an instance of an API

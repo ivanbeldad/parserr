@@ -14,12 +14,6 @@ func CleanFixedShows(a api.RRAPI, mediaFiles []*api.Media) error {
 		return nil
 	}
 	_, err = a.ExecuteCommandAndWait(a.ScanCommand())
-	// if a.Type == api.TypeMovie {
-	// 	_, err = a.ExecuteCommandAndWait(api.NewRescanMovieCommand())
-	// }
-	// if a.Type == api.TypeShow {
-	// 	_, err = a.ExecuteCommandAndWait(api.NewRescanSeriesCommand())
-	// }
 	if err != nil {
 		return err
 	}

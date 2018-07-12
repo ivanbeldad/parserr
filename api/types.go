@@ -180,29 +180,3 @@ func (c CommandBody) String() string {
 	format := "Command\nName: %s\nSeriesIds: %s\nMovieIds: %s\n"
 	return fmt.Sprintf(format, c.Name, c.SeriesIds, c.MovieIds)
 }
-
-// NewRescanSeriesCommand Create a command instance to force to rescan series form disk
-func NewRescanSeriesCommand() CommandBody {
-	return CommandBody{Name: "RescanSeries"}
-}
-
-// NewRescanMovieCommand Create a command instance to force to rescan movies form disk
-func NewRescanMovieCommand() CommandBody {
-	return CommandBody{Name: "RescanMovie"}
-}
-
-// NewRenameSeriesCommand ...
-func NewRenameSeriesCommand(ids []int) CommandBody {
-	return CommandBody{
-		Name:      "RenameSeries",
-		SeriesIds: ids,
-	}
-}
-
-// NewRenameMoviesCommand ...
-func NewRenameMoviesCommand(ids []int) CommandBody {
-	return CommandBody{
-		Name:     "RenameMovies",
-		MovieIds: ids,
-	}
-}

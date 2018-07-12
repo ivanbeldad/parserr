@@ -9,43 +9,25 @@ import (
 
 // Rename ...
 func Rename(a api.RRAPI, mediaFiles []*api.Media) error {
-	fixedMoviesIds := getMoviesIds(a, mediaFiles)
-	fixedShowsIds := getShowsIds(a, mediaFiles)
-	if len(fixedMoviesIds) > 0 {
-		log.Printf("renaming movies with ids: %s", idsStr(fixedMoviesIds))
-		cs, err := a.ExecuteCommandAndWait(api.NewRenameMoviesCommand(fixedMoviesIds))
+	fixedIds := getIds(a, mediaFiles)
+	if len(fixedIds) > 0 {
+		log.Printf("renaming files with ids: %s", idsStr(fixedIds))
+		cs, err := a.ExecuteCommandAndWait(a.RenameCommand(fixedIds))
 		if err != nil {
 			return err
 		}
-		log.Printf("rename movies status: %s", cs.State)
-	}
-	if len(fixedShowsIds) > 0 {
-		log.Printf("renaming series with ids: %s", idsStr(fixedShowsIds))
-		cs, err := a.ExecuteCommandAndWait(api.NewRenameSeriesCommand(fixedShowsIds))
-		if err != nil {
-			return err
-		}
-		log.Printf("rename series status: %s", cs.State)
+		log.Printf("rename files status: %s", cs.State)
 	}
 	return nil
 }
 
-func getMoviesIds(a api.RRAPI, mediaFiles []*api.Media) (fixedMoviesIds []int) {
+func getIds(a api.RRAPI, mediaFiles []*api.Media) (fixedIds []int) {
 	for _, file := range mediaFiles {
 		if file.HasBeenRenamed && file.HasBeenDetected(a) {
 			if file.Type == api.TypeMovie {
-				fixedMoviesIds = append(fixedMoviesIds, file.QueueElement.Movie.ID)
-			}
-		}
-	}
-	return
-}
-
-func getShowsIds(a api.RRAPI, mediaFiles []*api.Media) (fixedShowsIds []int) {
-	for _, file := range mediaFiles {
-		if file.HasBeenRenamed && file.HasBeenDetected(a) {
-			if file.Type == api.TypeShow {
-				fixedShowsIds = append(fixedShowsIds, file.QueueElement.Series.ID)
+				fixedIds = append(fixedIds, file.QueueElement.Movie.ID)
+			} else {
+				fixedIds = append(fixedIds, file.QueueElement.Series.ID)
 			}
 		}
 	}
