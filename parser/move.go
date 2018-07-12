@@ -10,19 +10,14 @@ import (
 )
 
 // MoveFailedShows ...
-func MoveFailedShows(a api.API, m Mover) ([]*api.Media, error) {
-	if a.Type == api.TypeMovie {
-		a.ExecuteCommandAndWait(api.NewRescanMovieCommand())
-	}
-	if a.Type == api.TypeShow {
-		a.ExecuteCommandAndWait(api.NewRescanSeriesCommand())
-	}
+func MoveFailedShows(a api.RRAPI, m Mover) ([]*api.Media, error) {
+	a.ExecuteCommandAndWait(a.ScanCommand())
 	mediaFiles, err := loadFailedMediaFiles(a)
 	if err != nil {
 		return nil, err
 	}
 	for _, s := range mediaFiles {
-		err = fixNaming(s, m, a.DownloadFolder)
+		err = fixNaming(s, m, a.GetDownloadFolder())
 		if err != nil {
 			log.Printf("error fixing file %s: %s", s.QueueElement.Title, err.Error())
 		}
@@ -31,7 +26,7 @@ func MoveFailedShows(a api.API, m Mover) ([]*api.Media, error) {
 }
 
 // loadFailedMediaFiles ...
-func loadFailedMediaFiles(a api.API) ([]*api.Media, error) {
+func loadFailedMediaFiles(a api.RRAPI) ([]*api.Media, error) {
 	mediaFiles := make([]*api.Media, 0)
 	queue, err := a.GetQueue()
 	if err != nil {
@@ -99,7 +94,7 @@ func fixNaming(mediaFile *api.Media, m Mover, downloadFolder string) error {
 	return nil
 }
 
-func addPageToHistory(a api.API, h api.History) (api.History, error) {
+func addPageToHistory(a api.RRAPI, h api.History) (api.History, error) {
 	newPage := h.Page + 1
 	newHistory, err := a.GetHistory(newPage)
 	if err != nil {

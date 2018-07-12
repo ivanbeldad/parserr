@@ -45,7 +45,7 @@ func (s Media) IsBroken() bool {
 
 // HasBeenDetected Return true if the show has been detected,
 // false otherwise (including errors)
-func (s Media) HasBeenDetected(a API) bool {
+func (s Media) HasBeenDetected(a RRAPI) bool {
 	if s.Type == TypeMovie {
 		movie, err := a.GetMovie(s.QueueElement.Movie.ID)
 		if err != nil {

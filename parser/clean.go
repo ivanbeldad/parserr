@@ -8,17 +8,18 @@ import (
 )
 
 // CleanFixedShows ...
-func CleanFixedShows(a api.API, mediaFiles []*api.Media) error {
+func CleanFixedShows(a api.RRAPI, mediaFiles []*api.Media) error {
 	var err error
 	if len(mediaFiles) == 0 {
 		return nil
 	}
-	if a.Type == api.TypeMovie {
-		_, err = a.ExecuteCommandAndWait(api.NewRescanMovieCommand())
-	}
-	if a.Type == api.TypeShow {
-		_, err = a.ExecuteCommandAndWait(api.NewRescanSeriesCommand())
-	}
+	_, err = a.ExecuteCommandAndWait(a.ScanCommand())
+	// if a.Type == api.TypeMovie {
+	// 	_, err = a.ExecuteCommandAndWait(api.NewRescanMovieCommand())
+	// }
+	// if a.Type == api.TypeShow {
+	// 	_, err = a.ExecuteCommandAndWait(api.NewRescanSeriesCommand())
+	// }
 	if err != nil {
 		return err
 	}

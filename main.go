@@ -14,8 +14,8 @@ func main() {
 	}
 }
 
-func execute(a api.API) {
-	parser.ExtractAll(a.DownloadFolder)
+func execute(a api.RRAPI) {
+	parser.ExtractAll(a.GetDownloadFolder())
 	move := parser.DiskMover{}
 	files, err := parser.MoveFailedShows(a, move)
 	if err != nil {
@@ -31,7 +31,7 @@ func execute(a api.API) {
 	}
 }
 
-func getAPIs() (apis []api.API) {
+func getAPIs() (apis []api.RRAPI) {
 	if os.Getenv(api.EnvRadarrURL) != "" {
 		apis = append(apis, radarr())
 	}
@@ -41,7 +41,7 @@ func getAPIs() (apis []api.API) {
 	return apis
 }
 
-func sonarr() api.API {
+func sonarr() api.RRAPI {
 	if os.Getenv(api.EnvSonarrAPIKey) == "" {
 		log.Fatal("empty sonarr apikey")
 	}
@@ -59,7 +59,7 @@ func sonarr() api.API {
 		api.TypeShow)
 }
 
-func radarr() api.API {
+func radarr() api.RRAPI {
 	if os.Getenv(api.EnvRadarrAPIKey) == "" {
 		log.Fatal("empty radarr apikey")
 	}

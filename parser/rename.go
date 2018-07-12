@@ -8,7 +8,7 @@ import (
 )
 
 // Rename ...
-func Rename(a api.API, mediaFiles []*api.Media) error {
+func Rename(a api.RRAPI, mediaFiles []*api.Media) error {
 	fixedMoviesIds := getMoviesIds(a, mediaFiles)
 	fixedShowsIds := getShowsIds(a, mediaFiles)
 	if len(fixedMoviesIds) > 0 {
@@ -30,7 +30,7 @@ func Rename(a api.API, mediaFiles []*api.Media) error {
 	return nil
 }
 
-func getMoviesIds(a api.API, mediaFiles []*api.Media) (fixedMoviesIds []int) {
+func getMoviesIds(a api.RRAPI, mediaFiles []*api.Media) (fixedMoviesIds []int) {
 	for _, file := range mediaFiles {
 		if file.HasBeenRenamed && file.HasBeenDetected(a) {
 			if file.Type == api.TypeMovie {
@@ -41,7 +41,7 @@ func getMoviesIds(a api.API, mediaFiles []*api.Media) (fixedMoviesIds []int) {
 	return
 }
 
-func getShowsIds(a api.API, mediaFiles []*api.Media) (fixedShowsIds []int) {
+func getShowsIds(a api.RRAPI, mediaFiles []*api.Media) (fixedShowsIds []int) {
 	for _, file := range mediaFiles {
 		if file.HasBeenRenamed && file.HasBeenDetected(a) {
 			if file.Type == api.TypeShow {

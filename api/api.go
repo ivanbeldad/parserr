@@ -49,11 +49,53 @@ type API struct {
 	Type           string
 }
 
+// Config ...
+type Config interface {
+	GetURL() string
+	GetAPIKey() string
+	GetDownloadFolder() string
+	GetType() string
+}
+
+// GetURL ...
+func (a API) GetURL() string {
+	return a.URL
+}
+
+// GetAPIKey ...
+func (a API) GetAPIKey() string {
+	return a.APIKey
+}
+
+// GetDownloadFolder ...
+func (a API) GetDownloadFolder() string {
+	return a.DownloadFolder
+}
+
+// GetType ...
+func (a API) GetType() string {
+	return a.Type
+}
+
+// RRAPI Complete Sonarr/Radarr API
+type RRAPI interface {
+	Config
+	Scanneable
+	GetQueue() (queue []QueueElement, err error)
+	DeleteQueueItem(id int) error
+	GetHistory(page int) (history History, err error)
+	GetEpisode(id int) (episode Episode, err error)
+	GetMovie(id int) (movie Movie, err error)
+	ExecuteCommand(c CommandBody) (cs CommandStatus, err error)
+	ExecuteCommandAndWait(c CommandBody) (cs CommandStatus, err error)
+	GetCommandStatus(id int) (cs CommandStatus, err error)
+}
+
 // Sonarr ...
-type Sonarr API
+type Sonarr struct{ API }
 
 // Radarr ...
-type Radarr API
+type Radarr struct{ API }
 
 // ScanCommand Create a command instance to force to rescan series form disk
 func (s Sonarr) ScanCommand() CommandBody {
@@ -66,12 +108,24 @@ func (r Radarr) ScanCommand() CommandBody {
 }
 
 // NewAPI Return an instance of an API
-func NewAPI(url, apiKey, downloadFolder, apiType string) API {
-	return API{
-		URL:            url,
-		APIKey:         apiKey,
-		DownloadFolder: downloadFolder,
-		Type:           apiType,
+func NewAPI(url, apiKey, downloadFolder, apiType string) RRAPI {
+	if apiType == TypeMovie {
+		return Radarr{
+			API{
+				URL:            url,
+				APIKey:         apiKey,
+				DownloadFolder: downloadFolder,
+				Type:           apiType,
+			},
+		}
+	}
+	return Sonarr{
+		API{
+			URL:            url,
+			APIKey:         apiKey,
+			DownloadFolder: downloadFolder,
+			Type:           apiType,
+		},
 	}
 }
 
