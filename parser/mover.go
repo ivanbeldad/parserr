@@ -28,7 +28,7 @@ type DiskMover struct{}
 func (m DiskMover) Move(sourcePath, destPath string) error {
 	destPathDir := filepath.Dir(destPath)
 	if _, err := os.Stat(destPathDir); os.IsNotExist(err) {
-		err := os.MkdirAll(destPathDir, os.ModeDir)
+		err := os.MkdirAll(destPathDir, 0770)
 		if err != nil {
 			return err
 		}
