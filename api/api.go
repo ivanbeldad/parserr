@@ -148,6 +148,7 @@ func (a API) ExecuteCommandAndWait(c CommandBody) (cs CommandStatus, err error) 
 				log.Printf("finished %s successfully", c.Name)
 				return
 			}
+			log.Printf("waiting response from %s", c.Name)
 		}
 		totalWait += CheckInterval
 	}

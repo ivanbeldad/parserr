@@ -51,6 +51,7 @@ func sonarr() api.API {
 	if os.Getenv(api.EnvSonarrURL) == "" {
 		log.Fatal("empty sonarr url")
 	}
+	log.Print("adding sonarr api")
 	return api.NewAPI(
 		os.Getenv("SONARR_URL"),
 		os.Getenv("SONARR_APIKEY"),
@@ -68,6 +69,7 @@ func radarr() api.API {
 	if os.Getenv(api.EnvRadarrURL) == "" {
 		log.Fatal("empty radarr url")
 	}
+	log.Print("adding radarr api")
 	return api.NewAPI(
 		os.Getenv("RADARR_URL"),
 		os.Getenv("RADARR_APIKEY"),
