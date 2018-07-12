@@ -12,6 +12,7 @@ import (
 
 // ExtractAll search for compressed files and extract them in place
 func ExtractAll(rootDir string) error {
+	log.Printf("searching for compressed files on: %s", rootDir)
 	var errors []string
 	var ar archiver.Archiver
 	filepath.Walk(rootDir, func(path string, file os.FileInfo, err error) (e error) {

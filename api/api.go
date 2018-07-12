@@ -41,6 +41,11 @@ type Scanneable interface {
 	ScanCommand() CommandBody
 }
 
+// DownloadFinishedChecker Can execute Scan to check new files
+type DownloadFinishedChecker interface {
+	CheckFinishedDownloadsCommand() CommandBody
+}
+
 // Renameable Can execute Scan to check new files
 type Renameable interface {
 	RenameCommand(ids []int) CommandBody
@@ -59,6 +64,7 @@ type RRAPI interface {
 	Config
 	Scanneable
 	Renameable
+	DownloadFinishedChecker
 	GetQueue() (queue []QueueElement, err error)
 	DeleteQueueItem(id int) error
 	GetHistory(page int) (history History, err error)
@@ -175,6 +181,13 @@ func NewAPI(url, apiKey, downloadFolder, apiType string) RRAPI {
 	}
 }
 
+// CheckFinishedDownloadsCommand ...
+func (a API) CheckFinishedDownloadsCommand() CommandBody {
+	return CommandBody{
+		Name: "CheckForFinishedDownload",
+	}
+}
+
 // GetQueue ...
 func (a API) GetQueue() (queue []QueueElement, err error) {
 	body, err := get(a.getURL(APIQueueURL).String())
@@ -245,6 +258,7 @@ func (a API) GetMovie(id int) (movie Movie, err error) {
 
 // ExecuteCommand ...
 func (a API) ExecuteCommand(c CommandBody) (cs CommandStatus, err error) {
+	log.Printf("executing: %s", c.Name)
 	j, err := json.Marshal(c)
 	if err != nil {
 		return
