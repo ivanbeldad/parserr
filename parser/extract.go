@@ -30,6 +30,11 @@ func ExtractAll(rootDir string) error {
 			return
 		}
 		log.Printf("compressed file extracted to: %s", filepath.Dir(path))
+		err = os.Remove(path)
+		if err != nil {
+			log.Printf("error removing rar: %s", err)
+		}
+		log.Printf("compressed file removed: %s", file.Name())
 		return
 	})
 	if len(errors) > 0 {

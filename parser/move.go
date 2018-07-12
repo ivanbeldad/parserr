@@ -11,6 +11,8 @@ import (
 
 // MoveFailedShows ...
 func MoveFailedShows(a api.API, m Mover) ([]*api.Media, error) {
+	a.ExecuteCommandAndWait(api.NewRescanMovieCommand())
+	a.ExecuteCommandAndWait(api.NewRescanSeriesCommand())
 	mediaFiles, err := loadFailedMediaFiles(a)
 	if err != nil {
 		return nil, err
