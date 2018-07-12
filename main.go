@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 	"os"
-	"sonarr-parser-helper/api"
-	"sonarr-parser-helper/parser"
+	"parserr/api"
+	"parserr/parser"
 
 	"github.com/joho/godotenv"
 )

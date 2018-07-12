@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"parserr/api"
 	"path"
 	"path/filepath"
-	"sonarr-parser-helper/api"
 	"strings"
 )
 

@@ -3,7 +3,7 @@ package parser
 import (
 	"fmt"
 	"log"
-	"sonarr-parser-helper/api"
+	"parserr/api"
 )
 
 // FailedMedia ...

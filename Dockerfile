@@ -4,11 +4,11 @@ LABEL maintainer="Ivan de la Beldad Fernandez <ivandelabeldad@gmail.com>"
 
 ENV GOPATH=/go
 
-ADD . /go/src/sonarr-parser-helper
+ADD . /go/src/parserr
 
-WORKDIR /go/src/sonarr-parser-helper
+WORKDIR /go/src/parserr
 
 RUN go get ./... && \
     go build -o main .
 
-CMD ["/go/src/sonarr-parser-helper/main"]
+CMD ["/go/src/parserr/main"]
