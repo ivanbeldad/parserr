@@ -36,12 +36,33 @@ const (
 	CheckInterval = time.Second * 5
 )
 
+// Scanneable Can execute Scan to check new files
+type Scanneable interface {
+	ScanCommand() CommandBody
+}
+
 // API ..
 type API struct {
 	URL            string
 	APIKey         string
 	DownloadFolder string
 	Type           string
+}
+
+// Sonarr ...
+type Sonarr API
+
+// Radarr ...
+type Radarr API
+
+// ScanCommand Create a command instance to force to rescan series form disk
+func (s Sonarr) ScanCommand() CommandBody {
+	return CommandBody{Name: "RescanSeries"}
+}
+
+// ScanCommand Create a command instance to force to rescan movies form disk
+func (r Radarr) ScanCommand() CommandBody {
+	return CommandBody{Name: "RescanMovie"}
 }
 
 // NewAPI Return an instance of an API
