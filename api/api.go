@@ -100,8 +100,32 @@ func (a API) GetType() string {
 // Sonarr ...
 type Sonarr struct{ API }
 
+// NewSonarr Create an API
+func NewSonarr(url, apiKey, downloadFolder string) Sonarr {
+	return Sonarr{
+		API{
+			URL:            url,
+			APIKey:         apiKey,
+			DownloadFolder: downloadFolder,
+			Type:           TypeShow,
+		},
+	}
+}
+
 // Radarr ...
 type Radarr struct{ API }
+
+// NewRadarr Create an API
+func NewRadarr(url, apiKey, downloadFolder string) Radarr {
+	return Radarr{
+		API{
+			URL:            url,
+			APIKey:         apiKey,
+			DownloadFolder: downloadFolder,
+			Type:           TypeMovie,
+		},
+	}
+}
 
 // ScanCommand Create a command instance to force to rescan series form disk
 func (s Sonarr) ScanCommand() CommandBody {
