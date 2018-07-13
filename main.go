@@ -19,7 +19,7 @@ func main() {
 
 func execute(a api.RRAPI) {
 	parser.ExtractAll(a.GetDownloadFolder())
-	a.ExecuteCommandAndWait(a.CheckFinishedDownloadsCommand())
+	a.ExecuteCommandAndWait(a.CheckFinishedDownloadsCommand(), api.DefaultRetries)
 	move := parser.BasicMover{}
 	files, err := parser.FailedMedia(a)
 	if err != nil {
@@ -31,7 +31,7 @@ func execute(a api.RRAPI) {
 		log.Println(err)
 		return
 	}
-	a.ExecuteCommandAndWait(a.CheckFinishedDownloadsCommand())
+	a.ExecuteCommandAndWait(a.CheckFinishedDownloadsCommand(), api.DefaultRetries)
 }
 
 func getAPIs() (apis []api.RRAPI) {

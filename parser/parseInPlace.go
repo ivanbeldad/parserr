@@ -70,7 +70,7 @@ func moveFileToFolder(oldpath string, m Mover) (dest string, err error) {
 	if err != nil {
 		return "", err
 	}
-	err = os.Mkdir(oldpath, 0775)
+	err = m.Mkdir(oldpath)
 	if err != nil {
 		m.Move(tmpPath, oldpath)
 		return "", err

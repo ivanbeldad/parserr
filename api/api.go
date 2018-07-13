@@ -34,6 +34,8 @@ const (
 	MaxTime = time.Second * 30
 	// CheckInterval Time between requests to check if rescan is completed
 	CheckInterval = time.Second * 5
+	// DefaultRetries ...
+	DefaultRetries = 3
 )
 
 // Scanneable Can execute Scan to check new files
