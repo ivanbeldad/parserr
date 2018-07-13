@@ -172,6 +172,7 @@ func (c CommandStatus) String() string {
 // CommandBody ...
 type CommandBody struct {
 	Name      string `json:"name"`
+	Path      string `json:"path,omitempty"`
 	SeriesIds []int  `json:"seriesIds,omitempty"`
 	MovieIds  []int  `json:"movieIds,omitempty"`
 }

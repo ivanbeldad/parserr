@@ -31,7 +31,7 @@ const (
 	// TrackedDownloadStatusWarning ...
 	TrackedDownloadStatusWarning = "Warning"
 	// MaxTime Max interval to check series and clean them
-	MaxTime = time.Minute * 5
+	MaxTime = time.Second * 30
 	// CheckInterval Time between requests to check if rescan is completed
 	CheckInterval = time.Second * 5
 )
@@ -51,6 +51,11 @@ type Renameable interface {
 	RenameCommand(ids []int) CommandBody
 }
 
+// DownloadScanner Can execute DownloadScan to import files manually
+type DownloadScanner interface {
+	DownloadScan(path string) CommandBody
+}
+
 // Config ...
 type Config interface {
 	GetURL() string
@@ -65,13 +70,14 @@ type RRAPI interface {
 	Scanneable
 	Renameable
 	DownloadFinishedChecker
+	DownloadScanner
 	GetQueue() (queue []QueueElement, err error)
 	DeleteQueueItem(id int) error
 	GetHistory(page int) (history History, err error)
 	GetEpisode(id int) (episode Episode, err error)
 	GetMovie(id int) (movie Movie, err error)
 	ExecuteCommand(c CommandBody) (cs CommandStatus, err error)
-	ExecuteCommandAndWait(c CommandBody) (cs CommandStatus, err error)
+	ExecuteCommandAndWait(c CommandBody, retries int) (cs CommandStatus, err error)
 	GetCommandStatus(id int) (cs CommandStatus, err error)
 }
 
@@ -131,6 +137,16 @@ func NewRadarr(url, apiKey, downloadFolder string) Radarr {
 			Type:           TypeMovie,
 		},
 	}
+}
+
+// DownloadScan Create a command instance to force to rescan series form disk
+func (s Sonarr) DownloadScan(path string) CommandBody {
+	return CommandBody{Name: "DownloadedEpisodesScan", Path: path}
+}
+
+// DownloadScan Create a command instance to force to rescan movies form disk
+func (r Radarr) DownloadScan(path string) CommandBody {
+	panic(fmt.Errorf("radarr doesn't implement DownloadScan"))
 }
 
 // ScanCommand Create a command instance to force to rescan series form disk
@@ -269,23 +285,28 @@ func (a API) ExecuteCommand(c CommandBody) (cs CommandStatus, err error) {
 }
 
 // ExecuteCommandAndWait ...
-func (a API) ExecuteCommandAndWait(c CommandBody) (cs CommandStatus, err error) {
-	cs, err = a.ExecuteCommand(c)
-	if err != nil {
-		return
-	}
-	totalWait := CheckInterval
-	for totalWait <= MaxTime {
-		time.Sleep(CheckInterval)
-		cs, err = a.GetCommandStatus(cs.ID)
-		if err == nil {
-			if cs.State == CommandStateCompleted {
-				log.Printf("finished %s successfully", c.Name)
-				return
-			}
-			log.Printf("waiting response from %s", c.Name)
+func (a API) ExecuteCommandAndWait(c CommandBody, retries int) (cs CommandStatus, err error) {
+	for i := 0; i < retries; i++ {
+		cs, err = a.ExecuteCommand(c)
+		if err != nil {
+			continue
 		}
-		totalWait += CheckInterval
+		totalWait := CheckInterval
+		for totalWait <= MaxTime {
+			time.Sleep(CheckInterval)
+			cs, err = a.GetCommandStatus(cs.ID)
+			if err == nil {
+				if cs.State == CommandStateCompleted {
+					log.Printf("finished %s successfully", c.Name)
+					return
+				}
+				log.Printf("waiting response from %s", c.Name)
+			}
+			totalWait += CheckInterval
+		}
+		if i != retries-1 {
+			log.Printf("timeout, retring another time: %d of %d", i+1, retries)
+		}
 	}
 	return cs, fmt.Errorf("timeout checking command %s, not completed", c.Name)
 }
