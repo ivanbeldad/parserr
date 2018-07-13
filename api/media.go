@@ -19,65 +19,66 @@ const (
 
 // Media ...
 type Media struct {
-	HistoryRecord        HistoryRecord
-	QueueElement         QueueElement
-	OriginalFileLocation string
-	FinalFileLocation    string
-	OriginalFilename     string
-	FinalFilename        string
-	Type                 string
-	FileExtension        string
+	HistoryRec    HistoryRec
+	QueueElem     QueueElem
+	FileLocOri    string
+	FileLocFinal  string
+	FilenameOri   string
+	FilenameFinal string
+	Type          string
+	FileExtension string
 }
 
 // NewMedia Generate a new Media struct with correct type and names
-func NewMedia(a RRAPI, hr HistoryRecord, qe QueueElement) (m Media, err error) {
+func NewMedia(a RRAPI, hr HistoryRec, qe QueueElem) (m Media, err error) {
 	if qe.Movie.Title != "" {
 		m.Type = TypeMovie
 	}
 	if qe.Series.Title != "" {
 		m.Type = TypeShow
 	}
-	m.HistoryRecord = hr
-	m.QueueElement = qe
+	m.HistoryRec = hr
+	m.QueueElem = qe
 	filename, err := m.guessOriginalFilename()
 	if err != nil {
 		return
 	}
-	m.OriginalFilename = filename
+	m.FilenameOri = filename
 	finalname, err := m.guessFinalFilename()
 	if err != nil {
 		return
 	}
-	m.FinalFilename = finalname
-	location, err := helpers.FindFile(a.GetDownloadFolder(), m.OriginalFilename)
+	m.FilenameFinal = finalname
+	location, err := helpers.FindFile(a.GetDownloadFolder(), m.FilenameOri)
 	if err != nil {
 		return
 	}
-	m.OriginalFileLocation = location
-	m.FileExtension = filepath.Ext(m.OriginalFilename)
+	m.FileLocOri = location
+	m.FileLocFinal = location
+	m.FileExtension = filepath.Ext(m.FilenameOri)
 	return
 }
 
 // IsBroken ...
 func (m Media) IsBroken() bool {
-	return m.HistoryRecord.TrackedDownloadStatus == TrackedDownloadStatusWarning
+	return m.HistoryRec.TrackedDownloadStatus == TrackedDownloadStatusWarning
 }
 
 // HasBeenDetected Return true if the show has been detected,
 // false otherwise (including errors)
 func (m Media) HasBeenDetected(a RRAPI) bool {
 	if m.Type == TypeMovie {
-		movie, err := a.GetMovie(m.QueueElement.Movie.ID)
+		movie, err := a.GetMovie(m.QueueElem.Movie.ID)
 		if err != nil {
-			log.Printf("cannot detect if movie %s has been detected", m.QueueElement.Title)
+			log.Printf("cannot detect if movie %s has been detected", m.QueueElem.Title)
 			return false
 		}
 		return movie.HasFile
 	}
 	if m.Type == TypeShow {
-		ep, err := a.GetEpisode(m.QueueElement.Episode.ID)
+		ep, err := a.GetEpisode(m.QueueElem.Episode.ID)
 		if err != nil {
-			log.Printf("cannot detect if episode %s has been detected", m.QueueElement.Title)
+			log.Printf("cannot detect if episode %s has been detected", m.QueueElem.Title)
 			return false
 		}
 		return ep.HasFile
@@ -87,12 +88,12 @@ func (m Media) HasBeenDetected(a RRAPI) bool {
 
 // DeleteFile Removes the file wherever the show is located
 func (m Media) DeleteFile() error {
-	if m.FinalFileLocation == "" {
-		return fmt.Errorf("cannot delete %s because destiny path is empty", m.QueueElement.Title)
+	if m.FileLocFinal == "" {
+		return fmt.Errorf("cannot delete %s because destiny path is empty", m.QueueElem.Title)
 	}
-	err := os.Remove(m.FinalFileLocation)
+	err := os.Remove(m.FileLocFinal)
 	if err != nil {
-		log.Printf("cannot delete %s from %s", m.QueueElement.Title, m.FinalFileLocation)
+		log.Printf("cannot delete %s from %s", m.QueueElem.Title, m.FileLocFinal)
 	}
 	return err
 }
@@ -109,10 +110,10 @@ func (m Media) guessOriginalFilename() (string, error) {
 }
 
 func guessShowFileName(m Media) (string, error) {
-	episode := m.QueueElement.Episode
+	episode := m.QueueElem.Episode
 	regexString := fmt.Sprintf("%d.{0,4}%d", episode.SeasonNumber, episode.EpisodeNumber)
 	regex := regexp.MustCompile(regexString)
-	for _, message := range m.QueueElement.StatusMessages {
+	for _, message := range m.QueueElem.StatusMessages {
 		if regex.MatchString(message.Title) {
 			extension := filepath.Ext(message.Title)
 			validExtensions := map[string]bool{".mkv": true, ".mp4": true, ".avi": true}
@@ -122,11 +123,11 @@ func guessShowFileName(m Media) (string, error) {
 			log.Printf("is not a valid file, skipping: %s\n", message.Title)
 		}
 	}
-	return "", fmt.Errorf("impossible to guess file name for %s", m.QueueElement.Title)
+	return "", fmt.Errorf("impossible to guess file name for %s", m.QueueElem.Title)
 }
 
 func guessMovieFileName(m Media) (string, error) {
-	for _, message := range m.QueueElement.StatusMessages {
+	for _, message := range m.QueueElem.StatusMessages {
 		extension := filepath.Ext(message.Title)
 		validExtensions := map[string]bool{".mkv": true, ".mp4": true, ".avi": true}
 		if validExtensions[extension] {
@@ -134,7 +135,7 @@ func guessMovieFileName(m Media) (string, error) {
 		}
 		log.Printf("is not a valid file, skipping: %s\n", message.Title)
 	}
-	return "", fmt.Errorf("impossible to guess file name for %s", m.QueueElement.Title)
+	return "", fmt.Errorf("impossible to guess file name for %s", m.QueueElem.Title)
 }
 
 // GuessFinalName ...
@@ -149,15 +150,15 @@ func (m Media) guessFinalFilename() (string, error) {
 }
 
 func (m Media) guessMovieFinalName() (string, error) {
-	finalTitle := m.HistoryRecord.SourceTitle
-	if len(m.QueueElement.StatusMessages) == 1 {
+	finalTitle := m.HistoryRec.SourceTitle
+	if len(m.QueueElem.StatusMessages) == 1 {
 		return finalTitle, nil
 	}
-	episode := m.QueueElement.Episode
+	episode := m.QueueElem.Episode
 	regexString := fmt.Sprintf("[.\\-_ ]([\\-_0-9sSeExX]{2,10})[.\\-_ ]")
 	regex := regexp.MustCompile(regexString)
 	if !regex.MatchString(finalTitle) {
-		return "", fmt.Errorf("unable to guess final episode name of %s", m.OriginalFilename)
+		return "", fmt.Errorf("unable to guess final episode name of %s", m.FilenameOri)
 	}
 	match := regex.FindString(finalTitle)
 	new := fmt.Sprintf(".S%.2dE%.2d.", episode.SeasonNumber, episode.EpisodeNumber)
@@ -166,15 +167,15 @@ func (m Media) guessMovieFinalName() (string, error) {
 }
 
 func (m Media) guessShowFinalName() (string, error) {
-	finalTitle := m.HistoryRecord.SourceTitle
-	if len(m.QueueElement.StatusMessages) == 1 {
+	finalTitle := m.HistoryRec.SourceTitle
+	if len(m.QueueElem.StatusMessages) == 1 {
 		return finalTitle, nil
 	}
-	episode := m.QueueElement.Episode
+	episode := m.QueueElem.Episode
 	regexString := fmt.Sprintf("[.\\-_ ]([\\-_0-9sSeExX]{2,10})[.\\-_ ]")
 	regex := regexp.MustCompile(regexString)
 	if !regex.MatchString(finalTitle) {
-		return "", fmt.Errorf("unable to guess final episode name of %s", m.OriginalFilename)
+		return "", fmt.Errorf("unable to guess final episode name of %s", m.FilenameOri)
 	}
 	match := regex.FindString(finalTitle)
 	new := fmt.Sprintf(".S%.2dE%.2d.", episode.SeasonNumber, episode.EpisodeNumber)

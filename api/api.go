@@ -73,7 +73,7 @@ type RRAPI interface {
 	Renameable
 	DownloadFinishedChecker
 	DownloadScanner
-	GetQueue() (queue []QueueElement, err error)
+	GetQueue() (queue []QueueElem, err error)
 	DeleteQueueItem(id int) error
 	GetHistory(page int) (history History, err error)
 	GetEpisode(id int) (episode Episode, err error)
@@ -207,7 +207,7 @@ func (a API) CheckFinishedDownloadsCommand() CommandBody {
 }
 
 // GetQueue ...
-func (a API) GetQueue() (queue []QueueElement, err error) {
+func (a API) GetQueue() (queue []QueueElem, err error) {
 	body, err := get(a.getURL(APIQueueURL).String())
 	if err != nil {
 		return
