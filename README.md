@@ -7,4 +7,4 @@ It also auto extract rar/zip files.
 ## License
 
 Parserr is open-sourced software licensed under
-the [MIT license](https://github.com/ivandelabeldad/parserr/blob/master/LICENSE).
+the [MIT license](https://github.com/ivanbeldad/parserr/blob/master/LICENSE).
