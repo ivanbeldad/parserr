@@ -27,9 +27,13 @@ func FailedMedia(a api.RRAPI) ([]*api.Media, error) {
 					continue
 				}
 				found = true
-				newMediaFile := api.NewMedia(hr, qe)
-				mediaFiles = append(mediaFiles, &newMediaFile)
-				log.Printf("failed media file detected: %s", qe.Title)
+				newMediaFile, fileErr := api.NewMedia(a, hr, qe)
+				if fileErr == nil {
+					mediaFiles = append(mediaFiles, &newMediaFile)
+					log.Printf("failed media file detected: %s", qe.Title)
+				} else {
+					log.Printf("cannot add failed media file: %s", fileErr.Error())
+				}
 				break
 			}
 			if !found {
