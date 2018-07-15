@@ -31,12 +31,7 @@ type Media struct {
 
 // NewMedia Generate a new Media struct with correct type and names
 func NewMedia(a RRAPI, hr HistoryRec, qe QueueElem) (m Media, err error) {
-	if qe.Movie.Title != "" {
-		m.Type = TypeMovie
-	}
-	if qe.Series.Title != "" {
-		m.Type = TypeShow
-	}
+	m.Type = a.GetType()
 	m.HistoryRec = hr
 	m.QueueElem = qe
 	filename, err := m.guessOriginalFilename()
@@ -44,18 +39,18 @@ func NewMedia(a RRAPI, hr HistoryRec, qe QueueElem) (m Media, err error) {
 		return
 	}
 	m.FilenameOri = filename
+	m.FileExtension = filepath.Ext(m.FilenameOri)
 	finalname, err := m.guessFinalFilename()
 	if err != nil {
 		return
 	}
-	m.FilenameFinal = finalname
+	m.FilenameFinal = finalname + m.FileExtension
 	location, err := helpers.FindFile(a.GetDownloadFolder(), m.FilenameOri)
 	if err != nil {
 		return
 	}
 	m.FileLocOri = location
 	m.FileLocFinal = location
-	m.FileExtension = filepath.Ext(m.FilenameOri)
 	return
 }
 
