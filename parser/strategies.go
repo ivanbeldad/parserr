@@ -16,27 +16,27 @@ type FixStrategy interface {
 // MaintainPathStrategy Rename file in place if its inside a folder or
 // create a folder with the name of the file and move it to that folder
 type MaintainPathStrategy struct {
-	api   api.RRAPI
-	mover Mover
+	API   api.RRAPI
+	Mover Mover
 }
 
 // MoveToOwnFolderStrategy Move file
 type MoveToOwnFolderStrategy struct {
-	api   api.RRAPI
-	mover Mover
+	API   api.RRAPI
+	Mover Mover
 }
 
 // StrategyFactory Return the fix strategy depending on the api
 func StrategyFactory(a api.RRAPI, m Mover) FixStrategy {
 	if a.GetType() == api.TypeMovie {
 		return MaintainPathStrategy{
-			api:   a,
-			mover: m,
+			API:   a,
+			Mover: m,
 		}
 	}
 	return MoveToOwnFolderStrategy{
-		api:   a,
-		mover: m,
+		API:   a,
+		Mover: m,
 	}
 }
 
@@ -55,15 +55,15 @@ func (s MaintainPathStrategy) move(m *api.Media) (err error) {
 	fileLocation := m.FileLocOri
 	fileIsOnRoot := m.QueueElem.Title == m.FilenameOri
 	if fileIsOnRoot {
-		fileLocation, err = moveFileToFolderWithSameName(m.FileLocOri, s.mover)
+		fileLocation, err = moveFileToFolderWithSameName(m.FileLocOri, s.Mover)
 		if err != nil {
 			log.Printf("cannot move file to a folder: %s", err.Error())
 			return err
 		}
 	}
-	newFileLocation := path.Join(filepath.Dir(fileLocation), m.FilenameFinal+m.FileExtension)
+	newFileLocation := path.Join(filepath.Dir(fileLocation), m.FilenameFinal)
 	log.Printf("moving from %s to %s", fileLocation, newFileLocation)
-	err = s.mover.Move(fileLocation, newFileLocation)
+	err = s.Mover.Move(fileLocation, newFileLocation)
 	if err != nil {
 		return err
 	}
@@ -103,7 +103,7 @@ func (s MoveToOwnFolderStrategy) Fix(m *api.Media) (err error) {
 	s.orderToImportFiles(newDir)
 	if _, err := os.Stat(newDir); err == nil {
 		log.Printf("file not imported correctly: %s", m.FileLocFinal)
-		err = s.mover.Move(m.FileLocFinal, m.FileLocOri)
+		err = s.Mover.Move(m.FileLocFinal, m.FileLocOri)
 		log.Printf("moving file back from: %s to: %s", m.FileLocFinal, m.FileLocOri)
 		os.Remove(newDir)
 		m.FileLocFinal = m.FileLocOri
@@ -112,10 +112,10 @@ func (s MoveToOwnFolderStrategy) Fix(m *api.Media) (err error) {
 }
 
 func (s MoveToOwnFolderStrategy) moveToFolder(m *api.Media) (err error) {
-	destDir := path.Join(s.api.GetDownloadFolder(), m.FilenameFinal)
+	destDir := path.Join(s.API.GetDownloadFolder(), m.FilenameFinal)
 	destFile := path.Join(destDir, destDir+m.FileExtension)
-	s.mover.Mkdir(destDir)
-	err = s.mover.Move(m.FileLocOri, destFile)
+	s.Mover.Mkdir(destDir)
+	err = s.Mover.Move(m.FileLocOri, destFile)
 	if err != nil {
 		log.Printf("cannot move file: %s", err.Error())
 		return
@@ -127,7 +127,7 @@ func (s MoveToOwnFolderStrategy) moveToFolder(m *api.Media) (err error) {
 
 func (s MoveToOwnFolderStrategy) orderToImportFiles(path string) (err error) {
 	log.Printf("forcing to import files from: %s", path)
-	command := s.api.DownloadScan(path)
-	_, err = s.api.ExecuteCommandAndWait(command, api.DefaultRetries)
+	command := s.API.DownloadScan(path)
+	_, err = s.API.ExecuteCommandAndWait(command, api.DefaultRetries)
 	return
 }
