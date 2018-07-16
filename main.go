@@ -26,12 +26,12 @@ func execute(a api.RRAPI) {
 		log.Println(err)
 		return
 	}
-	err = parser.FixFileNames(files, move, a.GetDownloadFolder())
+	fixStrategy := parser.StrategyFactory(a, move)
+	err = parser.FixMedia(files, fixStrategy)
 	if err != nil {
 		log.Println(err)
 		return
 	}
-	a.ExecuteCommandAndWait(a.CheckFinishedDownloadsCommand(), api.DefaultRetries)
 }
 
 func getAPIs() (apis []api.RRAPI) {
