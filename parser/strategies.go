@@ -20,8 +20,8 @@ type MaintainPathStrategy struct {
 	Mover Mover
 }
 
-// MoveToOwnFolderStrategy Move file
-type MoveToOwnFolderStrategy struct {
+// ForceImportStrategy Move file
+type ForceImportStrategy struct {
 	API   api.RRAPI
 	Mover Mover
 }
@@ -34,7 +34,7 @@ func StrategyFactory(a api.RRAPI, m Mover) FixStrategy {
 			Mover: m,
 		}
 	}
-	return MoveToOwnFolderStrategy{
+	return ForceImportStrategy{
 		API:   a,
 		Mover: m,
 	}
@@ -93,7 +93,7 @@ func moveFileToFolderWithSameName(fileLocation string, m Mover) (dest string, er
 
 // Fix Rename file in place if its inside a folder or
 // create a folder with the name of the file and move it to that folder
-func (s MoveToOwnFolderStrategy) Fix(m *api.Media) (err error) {
+func (s ForceImportStrategy) Fix(m *api.Media) (err error) {
 	log.Printf("move to own folder strategy: %s", m.FilenameOri)
 	err = s.moveToFolder(m)
 	if err != nil {
@@ -111,7 +111,7 @@ func (s MoveToOwnFolderStrategy) Fix(m *api.Media) (err error) {
 	return nil
 }
 
-func (s MoveToOwnFolderStrategy) moveToFolder(m *api.Media) (err error) {
+func (s ForceImportStrategy) moveToFolder(m *api.Media) (err error) {
 	destDir := path.Join(s.API.GetDownloadFolder(), m.FilenameFinal)
 	destFile := path.Join(destDir, destDir+m.FileExtension)
 	s.Mover.Mkdir(destDir)
@@ -125,7 +125,7 @@ func (s MoveToOwnFolderStrategy) moveToFolder(m *api.Media) (err error) {
 	return
 }
 
-func (s MoveToOwnFolderStrategy) orderToImportFiles(path string) (err error) {
+func (s ForceImportStrategy) orderToImportFiles(path string) (err error) {
 	log.Printf("forcing to import files from: %s", path)
 	command := s.API.DownloadScan(path)
 	_, err = s.API.ExecuteCommandAndWait(command, api.DefaultRetries)
